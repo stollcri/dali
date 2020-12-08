@@ -41,7 +41,8 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         self.batch_size = 16
         self.buffer_size = 60000
         self.epochs = 512
-        self.epochs_per_checkpoint = 8
+        self.epochs_per_checkpoint = 64
+        self.checkpoints_to_keep = 3
 
         self.image_width = 360
         self.image_height = 360
@@ -93,13 +94,14 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             generator=self.generator,
             discriminator=self.discriminator,
         )
-
-        self.manager = tf.train.CheckpointManager(
-            self.checkpoint, self.checkpoint_dir, max_to_keep=3
+        self.checkpoint_manager = tf.train.CheckpointManager(
+            self.checkpoint,
+            self.checkpoint_dir,
+            max_to_keep=self.checkpoints_to_keep,
         )
-        self.checkpoint.restore(self.manager.latest_checkpoint)
-        if self.manager.latest_checkpoint:
-            print("Restored from {}".format(self.manager.latest_checkpoint))
+        self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint)
+        if self.checkpoint_manager.latest_checkpoint:
+            print("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))
         else:
             print("Initializing from scratch.")
             self.generator.build(input_shape=self.seed.shape)
@@ -288,7 +290,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
             # Save the model every 15 epochs
             if (epoch + 1) % self.epochs_per_checkpoint == 0:
-                self.checkpoint.save(file_prefix=self.checkpoint_prefix)
+                self.checkpoint_manager.save()
 
             print(f"Epoch completed in {display_time(time.time() - start)}")
 

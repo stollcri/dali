@@ -20,9 +20,9 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 # data_dir = tf.keras.utils.get_file('flower_photos', origin=dataset_url, untar=True)
 # data_dir = pathlib.Path(data_dir)
 
-data_dir = pathlib.Path("/Users/stollcri/.keras/datasets/flower_photos")
+data_dir = pathlib.Path("./flower_photos_all")
 
-batch_size = 32
+batch_size = 64
 img_height = 360  # 180
 img_width = 360  # 180
 
@@ -122,7 +122,7 @@ model.compile(
 
 model.summary()
 
-epochs = 8  # 10
+epochs = 32
 history = model.fit(train_ds, validation_data=val_ds, epochs=epochs)
 
 model.save("./flower_model")

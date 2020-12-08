@@ -75,18 +75,23 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             discriminator=self.discriminator,
         )
 
+        self.manager = tf.train.CheckpointManager(
+            self.checkpoint, self.checkpoint_dir, max_to_keep=3
+        )
+        self.checkpoint.restore(self.manager.latest_checkpoint)
+        if self.manager.latest_checkpoint:
+            print("Restored from {}".format(self.manager.latest_checkpoint))
+        else:
+            print("Initializing from scratch.")
+
         # We will reuse this seed overtime (so it's easier)
         # to visualize progress in the animated GIF)
-        # self.seed = tf.random.normal([self.num_examples_to_generate, self.noise_dim])
-        # self.seed = tf.random.uniform(
-        #         [self.num_examples_to_generate, self.noise_dim], minval=-1, maxval=1
-        # )
         self.seed = self.make_some_noise()
 
         sunflower_image = keras.preprocessing.image.load_img(
             self.sunflower_path, target_size=(self.image_height, self.image_width)
         )
-        sunflower_array = keras.preprocessing.image.img_to_array(sunflower_image)    
+        sunflower_array = keras.preprocessing.image.img_to_array(sunflower_image)
         # random boolean mask for which values will be changed
         m = np.random.randint(0, 4, size=sunflower_array.shape).astype(np.bool)
         mask = np.invert(m)
@@ -94,7 +99,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         r = np.random.rand(*sunflower_array.shape) * np.max(sunflower_array)
         rando = r.astype(int)
         # use your mask to replace values in your input array
-        sunflower_array[mask] = rando[mask]        
+        sunflower_array[mask] = rando[mask]
         # self.sunflower_seed = np.average(tf.expand_dims(sunflower_array, 0), 3)
         self.sunflower_seed = tf.expand_dims(sunflower_array, 0)
 
@@ -182,26 +187,15 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         # This is so all layers run in inference mode (batchnorm).
         predictions = model(input, training=False)
 
-        # self.a_min.append(
-        #     tf.dtypes.cast(tf.math.reduce_min(predictions[0]), tf.float32)
-        # )
-        # self.a_max.append(
-        #     tf.dtypes.cast(tf.math.reduce_max(predictions[0]), tf.float32)
-        # )
-        # print(min(self.a_min))
-        # print(max(self.a_max))
-
-        # plt.imshow(predictions[0, :, :, :].numpy().astype("uint8"))
-        # plt.axis("off")
-        # plt.savefig(file_name)
-        
-        sizes = np.shape(predictions[0, :, :, :].numpy().astype("uint8"))     
-        fig = plt.figure(figsize=(1,1))
-        ax = plt.Axes(fig, [0., 0., 1., 1.])
+        sizes = np.shape(predictions[0, :, :, :].numpy().astype("uint8"))
+        fig = plt.figure(figsize=(1, 1))
+        ax = plt.Axes(fig, [0.0, 0.0, 1.0, 1.0])
         ax.set_axis_off()
         fig.add_axes(ax)
-        ax.imshow(predictions[0, :, :, :].numpy().astype("uint8"), cmap = plt.get_cmap("bone"))
-        plt.savefig(file_name, dpi = sizes[0]) 
+        ax.imshow(
+            predictions[0, :, :, :].numpy().astype("uint8"), cmap=plt.get_cmap("bone")
+        )
+        plt.savefig(file_name, dpi=sizes[0])
         plt.close()
 
     # Notice the use of `tf.function`

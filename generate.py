@@ -66,6 +66,25 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
+        # We will reuse this seed overtime (so it's easier)
+        # to visualize progress in the animated GIF)
+        self.seed = self.make_some_noise()
+        
+        sunflower_image = keras.preprocessing.image.load_img(
+            self.sunflower_path, target_size=(self.image_height, self.image_width)
+        )
+        sunflower_array = keras.preprocessing.image.img_to_array(sunflower_image)
+        # random boolean mask for which values will be changed
+        m = np.random.randint(0, 4, size=sunflower_array.shape).astype(np.bool)
+        mask = np.invert(m)
+        # random matrix the same shape of your data
+        r = np.random.rand(*sunflower_array.shape) * np.max(sunflower_array)
+        rando = r.astype(int)
+        # use your mask to replace values in your input array
+        sunflower_array[mask] = rando[mask]
+        # self.sunflower_seed = np.average(tf.expand_dims(sunflower_array, 0), 3)
+        self.sunflower_seed = tf.expand_dims(sunflower_array, 0)
+
         self.checkpoint_dir = "./generator_checkpoints"
         self.checkpoint_prefix = os.path.join(self.checkpoint_dir, "ckpt")
         self.checkpoint = tf.train.Checkpoint(
@@ -83,28 +102,10 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             print("Restored from {}".format(self.manager.latest_checkpoint))
         else:
             print("Initializing from scratch.")
-
-        # We will reuse this seed overtime (so it's easier)
-        # to visualize progress in the animated GIF)
-        self.seed = self.make_some_noise()
-
-        sunflower_image = keras.preprocessing.image.load_img(
-            self.sunflower_path, target_size=(self.image_height, self.image_width)
-        )
-        sunflower_array = keras.preprocessing.image.img_to_array(sunflower_image)
-        # random boolean mask for which values will be changed
-        m = np.random.randint(0, 4, size=sunflower_array.shape).astype(np.bool)
-        mask = np.invert(m)
-        # random matrix the same shape of your data
-        r = np.random.rand(*sunflower_array.shape) * np.max(sunflower_array)
-        rando = r.astype(int)
-        # use your mask to replace values in your input array
-        sunflower_array[mask] = rando[mask]
-        # self.sunflower_seed = np.average(tf.expand_dims(sunflower_array, 0), 3)
-        self.sunflower_seed = tf.expand_dims(sunflower_array, 0)
-
-        self.a_min = []
-        self.a_max = []
+            self.generator.build(input_shape=self.sunflower_seed.shape)
+            self.generator.layers[1].set_weights(self.discriminator.layers[2].get_weights())
+            self.generator.layers[3].set_weights(self.discriminator.layers[4].get_weights())
+            self.generator.layers[5].set_weights(self.discriminator.layers[6].get_weights())
 
     def make_some_noise(self):
         return tf.random.uniform(
@@ -124,18 +125,30 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         model = tf.keras.Sequential(
             [
                 layers.experimental.preprocessing.Rescaling(1.0 / 127.5, offset=-1),
-                layers.Lambda(
-                    channelPool,
-                    input_shape=(self.image_width, self.image_height, self.image_depth),
-                    output_shape=(360, 360),
-                ),
-                layers.experimental.preprocessing.Resizing(
-                    45,
-                    45,
-                    interpolation="bilinear",
-                    input_shape=(self.image_width, self.image_height, 1),
-                ),
-                layers.Reshape((45 * 45 * 1,), input_shape=(45, 45, 1)),
+                
+                layers.Conv2D(16, 3, padding="same", activation="relu"),
+                layers.MaxPooling2D(),
+                layers.Conv2D(32, 3, padding="same", activation="relu"),
+                layers.MaxPooling2D(),
+                layers.Conv2D(64, 3, padding="same", activation="relu"),
+                layers.MaxPooling2D(),
+                layers.Dropout(0.2),
+                layers.Flatten(),
+                
+                layers.Dense(45 * 45 * 1, activation="relu"),
+
+                # layers.Lambda(
+                #     channelPool,
+                #     input_shape=(self.image_width, self.image_height, self.image_depth),
+                #     output_shape=(360, 360),
+                # ),
+                # layers.experimental.preprocessing.Resizing(
+                #     45,
+                #     45,
+                #     interpolation="bilinear",
+                #     input_shape=(self.image_width, self.image_height, 1),
+                # ),
+                # layers.Reshape((45 * 45 * 1,), input_shape=(45, 45, 1)),
                 layers.Dense(45 * 45 * 32, use_bias=False, input_shape=(45 * 45 * 1,)),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
@@ -207,6 +220,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
             generated_images = self.generator(noise, training=True)
+            # self.generator.summary()
 
             real_output = self.discriminator(images[0], training=True)
             fake_output = self.discriminator(generated_images, training=True)

@@ -104,11 +104,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             print("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))
         else:
             print("Initializing from scratch.")
-            self.generator.build(input_shape=self.seed.shape)
-            self.generator.layers[1].set_weights(self.discriminator.layers[2].get_weights())
-            self.generator.layers[3].set_weights(self.discriminator.layers[4].get_weights())
-            self.generator.layers[5].set_weights(self.discriminator.layers[6].get_weights())
-            self.generator.summary()
+            # self.generator.build(input_shape=self.seed.shape)
+            # self.generator.layers[1].set_weights(self.discriminator.layers[2].get_weights())
+            # self.generator.layers[3].set_weights(self.discriminator.layers[4].get_weights())
+            # self.generator.layers[5].set_weights(self.discriminator.layers[6].get_weights())
+            # self.generator.summary()
         # exit()
 
     def make_some_noise(self):
@@ -174,23 +174,18 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    8,
-                    (5, 5),
-                    strides=(2, 2),
-                    padding="same",
-                    use_bias=False,
-                    activation="tanh",
+                    3, (5, 5), strides=(2, 2), padding="same", use_bias=False,
                 ),
-                layers.BatchNormalization(),
-                layers.LeakyReLU(),
-                layers.Conv2DTranspose(
-                    3,
-                    (5, 5),
-                    strides=(1, 1),
-                    padding="same",
-                    use_bias=False,
-                    activation="tanh",
-                ),
+                # layers.BatchNormalization(),
+                # layers.LeakyReLU(),
+                # layers.Conv2DTranspose(
+                #     3,
+                #     (5, 5),
+                #     strides=(1, 1),
+                #     padding="same",
+                #     use_bias=False,
+                #     activation="tanh",
+                # ),
                 layers.experimental.preprocessing.Rescaling(127.0, offset=127.0),
             ]
         )

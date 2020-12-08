@@ -102,7 +102,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             print("Restored from {}".format(self.manager.latest_checkpoint))
         else:
             print("Initializing from scratch.")
-            self.generator.build(input_shape=self.sunflower_seed.shape)
+            self.generator.build(input_shape=self.seed.shape)
             self.generator.layers[1].set_weights(self.discriminator.layers[2].get_weights())
             self.generator.layers[3].set_weights(self.discriminator.layers[4].get_weights())
             self.generator.layers[5].set_weights(self.discriminator.layers[6].get_weights())

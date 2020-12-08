@@ -1,0 +1,8 @@
+Pillow>=8.0.1
+imageio>=2.9.0
+imageio-ffmpeg>=0.4.2
+ipython>=7.19.0
+matplotlib>=3.3.3
+numpy>=1.18.5
+progress>=1.5
+tensorflow>=2.3.1

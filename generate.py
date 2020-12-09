@@ -226,21 +226,31 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def generator_loss(self, fake_output):
         return self.cross_entropy(tf.ones_like(fake_output), fake_output)
 
-    def generate_and_save_images(self, model, input, file_name):
+    def generate_and_save_images(self, model, input, file_name, print_multiple=False):
         # Notice `training` is set to False.
         # This is so all layers run in inference mode (batchnorm).
         predictions = model(input, training=False)
 
-        sizes = np.shape(predictions[0, :, :, :].numpy().astype("uint8"))
-        fig = plt.figure(figsize=(1, 1))
-        ax = plt.Axes(fig, [0.0, 0.0, 1.0, 1.0])
-        ax.set_axis_off()
-        fig.add_axes(ax)
-        ax.imshow(
-            predictions[0, :, :, :].numpy().astype("uint8"), cmap=plt.get_cmap("bone")
-        )
-        plt.savefig(file_name, dpi=sizes[0])
-        plt.close()
+        if print_multiple:
+            fig = plt.figure(figsize=(4,4))
+            for i in range(predictions.shape[0]):
+                plt.subplot(4, 4, i+1)
+                plt.imshow(predictions[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
+                plt.axis('off')
+            plt.savefig(file_name)
+            plt.close()
+
+        else:
+            sizes = np.shape(predictions[0, :, :, :].numpy().astype("uint8"))
+            fig = plt.figure(figsize=(1, 1))
+            ax = plt.Axes(fig, [0.0, 0.0, 1.0, 1.0])
+            ax.set_axis_off()
+            fig.add_axes(ax)
+            ax.imshow(
+                predictions[0, :, :, :].numpy().astype("uint8"), cmap=plt.get_cmap("bone")
+            )
+            plt.savefig(file_name, dpi=sizes[0])
+            plt.close()
 
     # Notice the use of `tf.function`
     # This annotation causes the function to be "compiled".
@@ -302,6 +312,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 self.generator,
                 self.seed,
                 "generator_images/seed_{:04d}.png".format(epoch + 1),
+                True,
             )
             self.generate_and_save_images(
                 self.generator,
@@ -318,7 +329,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         # Generate after the final epoch
         display.clear_output(wait=True)
         self.generate_and_save_images(
-            self.generator, self.seed, "generator_images/seed_{:04d}.png".format(epoch)
+            self.generator, self.seed, "generator_images/seed_{:04d}.png".format(epoch), True
         )
         self.generate_and_save_images(
             self.generator,

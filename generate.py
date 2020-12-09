@@ -196,8 +196,9 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     strides=(2, 2),
                     padding="same",
                     use_bias=False,
+                    activation="tanh",
                 ),
-                # layers.BatchNormalization(),
+                layers.BatchNormalization(),
                 # layers.LeakyReLU(),
                 # layers.Conv2DTranspose(
                 #     3,
@@ -207,7 +208,8 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 #     use_bias=False,
                 #     activation="tanh",
                 # ),
-                layers.experimental.preprocessing.Rescaling(255),
+                # layers.experimental.preprocessing.Rescaling(255),
+                layers.experimental.preprocessing.Rescaling(127.5, offset=127.5),
             ]
         )
         return model
@@ -261,6 +263,9 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             plt.close()
 
         else:
+            preds = predictions[0, :, :, :].numpy()
+            print(f"Results range: {np.min(preds)} - {np.max(preds)}")
+            
             sizes = np.shape(predictions[0, :, :, :].numpy().astype("uint8"))
             fig = plt.figure(figsize=(1, 1))
             ax = plt.Axes(fig, [0.0, 0.0, 1.0, 1.0])

@@ -38,7 +38,7 @@ def display_time(seconds, granularity=3):
 
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def __init__(self):
-        self.batch_size = 16
+        self.batch_size = 4
         self.buffer_size = 60000
         self.epochs = 512
         self.epochs_per_checkpoint = 32
@@ -268,15 +268,10 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         print(f"Results range: {np.min(preds)} - {np.max(preds)}")
 
         if print_multiple:
-            fig = plt.figure(figsize=(4, 4))
+            fig = plt.figure(figsize=(6, 6))
             for i in range(predictions.shape[0]):
-                plt.subplot(4, 4, i + 1)
-                if i % 2 == 0:
-                    plt.imshow(
-                        predictions[i, :, :, :].numpy().astype("uint8"), cmap="gray"
-                    )
-                else:
-                    plt.imshow(predictions[i, :, :, :].numpy().astype("uint8"))
+                plt.subplot(2, 2, i + 1)
+                plt.imshow(predictions[i, :, :, :].numpy().astype("uint8"))
                 plt.axis("off")
             plt.savefig(file_name)
             plt.close()
@@ -354,7 +349,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 self.generator,
                 self.seed,
                 "generator_images/seed_{:04d}.png".format(epoch + 1),
-                True,
             )
             # self.generate_and_save_images(
             #     self.generator,
@@ -374,7 +368,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             self.generator,
             self.seed,
             "generator_images/seed_{:04d}.png".format(epoch),
-            True,
         )
         # self.generate_and_save_images(
         #     self.generator,

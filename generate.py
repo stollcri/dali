@@ -44,11 +44,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         self.epochs_per_checkpoint = 32
         self.checkpoints_to_keep = 3
 
-        self.image_width = 360
         self.image_height = 360
+        self.image_width = 360
         self.image_depth = 3
 
-        self.noise_dim = int((self.image_width + self.image_height) / 2)
+        self.noise_dim = int((self.image_height + self.image_width) / 2)
         self.num_examples_to_generate = 16
 
         self.flowers_path = pathlib.Path("./flower_photos/")
@@ -72,7 +72,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
 
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-        
+
         sunflower_image = keras.preprocessing.image.load_img(
             self.sunflower_path, target_size=(self.image_height, self.image_width)
         )
@@ -105,23 +105,29 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             print("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))
         else:
             print("Initializing from scratch.")
-            
+
             pre_trained_model = keras.models.load_model("./flower_model")
-            
-            # self.generator.build(input_shape=self.seed.shape)
-            # self.generator.layers[1].set_weights(pre_trained_model.layers[2].get_weights())
-            # self.generator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
-            # self.generator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
-            
+
+            self.generator.build(input_shape=self.seed.shape)
+            self.generator.layers[1].set_weights(pre_trained_model.layers[2].get_weights())
+            self.generator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
+            self.generator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
+
             self.discriminator.build(input_shape=self.seed.shape)
-            self.discriminator.layers[1].set_weights(pre_trained_model.layers[2].get_weights())
-            self.discriminator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
-            self.discriminator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
+            self.discriminator.layers[1].set_weights(
+                pre_trained_model.layers[2].get_weights()
+            )
+            self.discriminator.layers[3].set_weights(
+                pre_trained_model.layers[4].get_weights()
+            )
+            self.discriminator.layers[5].set_weights(
+                pre_trained_model.layers[6].get_weights()
+            )
         # exit()
 
     def make_some_noise(self):
         return tf.random.uniform(
-            [self.batch_size, self.image_width, self.image_height, self.image_depth],
+            [self.batch_size, self.image_height, self.image_width, self.image_depth],
             minval=0,
             maxval=255,
         )
@@ -136,38 +142,41 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         model = tf.keras.Sequential(
             [
-                layers.experimental.preprocessing.Rescaling(1.0 / 127.5, offset=-1),
+                layers.experimental.preprocessing.Rescaling(
+                    1.0 / 255,
+                    input_shape=(self.image_height, self.image_width, self.image_depth),
+                ),
                 
-                # layers.Conv2D(16, 3, padding="same", activation="relu"),
-                # layers.MaxPooling2D(),
-                # layers.Conv2D(32, 3, padding="same", activation="relu"),
-                # layers.MaxPooling2D(),
-                # layers.Conv2D(64, 3, padding="same", activation="relu"),
-                # layers.MaxPooling2D(),
-                # layers.Dropout(0.2),
+                layers.Conv2D(16, 3, padding="same", activation="relu", trainable=False),
+                layers.MaxPooling2D(),
+                layers.Conv2D(32, 3, padding="same", activation="relu", trainable=False),
+                layers.MaxPooling2D(),
+                layers.Conv2D(64, 3, padding="same", activation="relu", trainable=False),
+                layers.MaxPooling2D(),
+                layers.Dropout(0.2),
                 layers.experimental.preprocessing.Resizing(
-                    24,
-                    24,
+                    16,
+                    16,
                     interpolation="bilinear",
-                    input_shape=(self.image_width, self.image_height, 1),
+                    input_shape=(self.image_height, self.image_width, 1),
                 ),
                 layers.Flatten(),
-                
-                layers.Dense(45 * 45 * 32, activation="relu"),
+                layers.Dense(42 * 42 * 1, activation="relu"),
 
                 # layers.Lambda(
                 #     channelPool,
-                #     input_shape=(self.image_width, self.image_height, self.image_depth),
+                #     input_shape=(self.image_height, self.image_width, self.image_depth),
                 #     output_shape=(360, 360),
                 # ),
                 # layers.experimental.preprocessing.Resizing(
                 #     45,
                 #     45,
                 #     interpolation="bilinear",
-                #     input_shape=(self.image_width, self.image_height, 1),
+                #     input_shape=(self.image_height, self.image_width, 1),
                 # ),
                 # layers.Reshape((36 * 36 * 1,), input_shape=(36, 36, 1)),
-                # layers.Dense(45 * 45 * 32, use_bias=False, input_shape=(36 * 36 * 1,)),
+    
+                layers.Dense(45 * 45 * 32, use_bias=False, input_shape=(42 * 42 * 1,)),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Reshape((45, 45, 32), input_shape=(45 * 45 * 32,)),
@@ -182,7 +191,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    3, (5, 5), strides=(2, 2), padding="same", use_bias=False,
+                    3,
+                    (5, 5),
+                    strides=(2, 2),
+                    padding="same",
+                    use_bias=False,
                 ),
                 # layers.BatchNormalization(),
                 # layers.LeakyReLU(),
@@ -194,7 +207,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 #     use_bias=False,
                 #     activation="tanh",
                 # ),
-                layers.experimental.preprocessing.Rescaling(127.5, offset=127.5),
+                layers.experimental.preprocessing.Rescaling(255),
             ]
         )
         return model
@@ -202,14 +215,17 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def make_discriminator_model(self):
         model = tf.keras.Sequential(
             [
-                layers.experimental.preprocessing.Rescaling(1.0 / 127.5, offset=-1),
+                layers.experimental.preprocessing.Rescaling(
+                    1.0 / 255,
+                    input_shape=(self.image_height, self.image_width, self.image_depth),
+                ),
                 layers.Conv2D(16, 3, padding="same", activation="relu"),
                 layers.MaxPooling2D(),
                 layers.Conv2D(32, 3, padding="same", activation="relu"),
                 layers.MaxPooling2D(),
                 layers.Conv2D(64, 3, padding="same", activation="relu"),
                 layers.MaxPooling2D(),
-                layers.Dropout(0.2),                
+                layers.Dropout(0.2),
                 layers.Flatten(),
                 layers.Dense(1),
             ]
@@ -231,14 +247,16 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         predictions = model(input, training=False)
 
         if print_multiple:
-            fig = plt.figure(figsize=(4,4))
+            fig = plt.figure(figsize=(4, 4))
             for i in range(predictions.shape[0]):
-                plt.subplot(4, 4, i+1)
+                plt.subplot(4, 4, i + 1)
                 if i % 2 == 0:
-                    plt.imshow(predictions[i, :, :, :].numpy().astype("uint8"), cmap='gray')
+                    plt.imshow(
+                        predictions[i, :, :, :].numpy().astype("uint8"), cmap="gray"
+                    )
                 else:
                     plt.imshow(predictions[i, :, :, :].numpy().astype("uint8"))
-                plt.axis('off')
+                plt.axis("off")
             plt.savefig(file_name)
             plt.close()
 
@@ -249,7 +267,8 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             ax.set_axis_off()
             fig.add_axes(ax)
             ax.imshow(
-                predictions[0, :, :, :].numpy().astype("uint8"), cmap=plt.get_cmap("bone")
+                predictions[0, :, :, :].numpy().astype("uint8"),
+                cmap=plt.get_cmap("bone"),
             )
             plt.savefig(file_name, dpi=sizes[0])
             plt.close()
@@ -331,7 +350,10 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         # Generate after the final epoch
         display.clear_output(wait=True)
         self.generate_and_save_images(
-            self.generator, self.seed, "generator_images/seed_{:04d}.png".format(epoch), True
+            self.generator,
+            self.seed,
+            "generator_images/seed_{:04d}.png".format(epoch),
+            True,
         )
         self.generate_and_save_images(
             self.generator,

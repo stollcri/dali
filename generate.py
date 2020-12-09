@@ -182,19 +182,19 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    3, (5, 5), strides=(2, 2), padding="same", use_bias=False,
+                    8, (5, 5), strides=(2, 2), padding="same", use_bias=False,
                 ),
-                # layers.BatchNormalization(),
-                # layers.LeakyReLU(),
-                # layers.Conv2DTranspose(
-                #     3,
-                #     (5, 5),
-                #     strides=(1, 1),
-                #     padding="same",
-                #     use_bias=False,
-                #     activation="tanh",
-                # ),
-                layers.experimental.preprocessing.Rescaling(127.0, offset=127.0),
+                layers.BatchNormalization(),
+                layers.LeakyReLU(),
+                layers.Conv2DTranspose(
+                    3,
+                    (5, 5),
+                    strides=(1, 1),
+                    padding="same",
+                    use_bias=False,
+                    activation="tanh",
+                ),
+                layers.experimental.preprocessing.Rescaling(127.5, offset=127.5),
             ]
         )
         return model

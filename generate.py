@@ -41,7 +41,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         self.batch_size = 16
         self.buffer_size = 60000
         self.epochs = 512
-        self.epochs_per_checkpoint = 64
+        self.epochs_per_checkpoint = 32
         self.checkpoints_to_keep = 3
 
         self.image_width = 360

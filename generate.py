@@ -108,10 +108,10 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             
             pre_trained_model = keras.models.load_model("./flower_model")
             
-            self.generator.build(input_shape=self.seed.shape)
-            self.generator.layers[1].set_weights(pre_trained_model.layers[2].get_weights())
-            self.generator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
-            self.generator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
+            # self.generator.build(input_shape=self.seed.shape)
+            # self.generator.layers[1].set_weights(pre_trained_model.layers[2].get_weights())
+            # self.generator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
+            # self.generator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
             
             self.discriminator.build(input_shape=self.seed.shape)
             self.discriminator.layers[1].set_weights(pre_trained_model.layers[2].get_weights())
@@ -138,35 +138,35 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             [
                 layers.experimental.preprocessing.Rescaling(1.0 / 127.5, offset=-1),
                 
-                layers.Conv2D(16, 3, padding="same", activation="relu"),
-                layers.MaxPooling2D(),
-                layers.Conv2D(32, 3, padding="same", activation="relu"),
-                layers.MaxPooling2D(),
-                layers.Conv2D(64, 3, padding="same", activation="relu"),
-                layers.MaxPooling2D(),
-                layers.Dropout(0.2),
-                layers.experimental.preprocessing.Resizing(
-                    32,
-                    32,
-                    interpolation="bilinear",
-                    input_shape=(self.image_width, self.image_height, 1),
-                ),
-                layers.Flatten(),
-                
-                layers.Dense(32 * 32 * 1, activation="relu"),
-
-                # layers.Lambda(
-                #     channelPool,
-                #     input_shape=(self.image_width, self.image_height, self.image_depth),
-                #     output_shape=(360, 360),
-                # ),
+                # layers.Conv2D(16, 3, padding="same", activation="relu"),
+                # layers.MaxPooling2D(),
+                # layers.Conv2D(32, 3, padding="same", activation="relu"),
+                # layers.MaxPooling2D(),
+                # layers.Conv2D(64, 3, padding="same", activation="relu"),
+                # layers.MaxPooling2D(),
+                # layers.Dropout(0.2),
                 # layers.experimental.preprocessing.Resizing(
-                #     45,
-                #     45,
+                #     32,
+                #     32,
                 #     interpolation="bilinear",
                 #     input_shape=(self.image_width, self.image_height, 1),
                 # ),
-                # layers.Reshape((45 * 45 * 1,), input_shape=(45, 45, 1)),
+                # layers.Flatten(),
+                # 
+                # layers.Dense(32 * 32 * 1, activation="relu"),
+
+                layers.Lambda(
+                    channelPool,
+                    input_shape=(self.image_width, self.image_height, self.image_depth),
+                    output_shape=(360, 360),
+                ),
+                layers.experimental.preprocessing.Resizing(
+                    45,
+                    45,
+                    interpolation="bilinear",
+                    input_shape=(self.image_width, self.image_height, 1),
+                ),
+                layers.Reshape((45 * 45 * 1,), input_shape=(45, 45, 1)),
                 layers.Dense(45 * 45 * 32, use_bias=False, input_shape=(32 * 32 * 1,)),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),

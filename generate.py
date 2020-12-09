@@ -145,29 +145,29 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 # layers.Conv2D(64, 3, padding="same", activation="relu"),
                 # layers.MaxPooling2D(),
                 # layers.Dropout(0.2),
-                # layers.experimental.preprocessing.Resizing(
-                #     32,
-                #     32,
-                #     interpolation="bilinear",
-                #     input_shape=(self.image_width, self.image_height, 1),
-                # ),
-                # layers.Flatten(),
-                # 
-                # layers.Dense(32 * 32 * 1, activation="relu"),
-
-                layers.Lambda(
-                    channelPool,
-                    input_shape=(self.image_width, self.image_height, self.image_depth),
-                    output_shape=(360, 360),
-                ),
                 layers.experimental.preprocessing.Resizing(
-                    45,
-                    45,
+                    36,
+                    36,
                     interpolation="bilinear",
                     input_shape=(self.image_width, self.image_height, 1),
                 ),
-                layers.Reshape((45 * 45 * 1,), input_shape=(45, 45, 1)),
-                layers.Dense(45 * 45 * 32, use_bias=False, input_shape=(32 * 32 * 1,)),
+                layers.Flatten(),
+                
+                layers.Dense(36 * 36 * 1, activation="relu"),
+
+                # layers.Lambda(
+                #     channelPool,
+                #     input_shape=(self.image_width, self.image_height, self.image_depth),
+                #     output_shape=(360, 360),
+                # ),
+                # layers.experimental.preprocessing.Resizing(
+                #     45,
+                #     45,
+                #     interpolation="bilinear",
+                #     input_shape=(self.image_width, self.image_height, 1),
+                # ),
+                layers.Reshape((36 * 36 * 1,), input_shape=(36, 36, 1)),
+                layers.Dense(45 * 45 * 32, use_bias=False, input_shape=(36 * 36 * 1,)),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Reshape((45, 45, 32), input_shape=(45 * 45 * 32,)),

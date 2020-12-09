@@ -55,21 +55,23 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         self.sunflower_path = pathlib.Path("./592px-Red_sunflower.jpg")
 
         self.generator = self.make_generator_model()
-        self.discriminator = keras.models.load_model("./flower_model")
+        # self.discriminator = keras.models.load_model("./flower_model")
+        self.discriminator = self.make_discriminator_model()
 
-        # self.discriminator.summary()
-        # self.generator.build()
+        # We will reuse this seed overtime (so it's easier)
+        # to visualize progress in the animated GIF)
+        self.seed = self.make_some_noise()
+
+        # self.generator.build(input_shape=self.seed.shape)
         # self.generator.summary()
+        # self.discriminator.build(input_shape=self.seed.shape)
+        # self.discriminator.summary()
         # exit()
 
         self.generator_optimizer = tf.keras.optimizers.Adam(1e-4)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
 
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-
-        # We will reuse this seed overtime (so it's easier)
-        # to visualize progress in the animated GIF)
-        self.seed = self.make_some_noise()
         
         sunflower_image = keras.preprocessing.image.load_img(
             self.sunflower_path, target_size=(self.image_height, self.image_width)
@@ -104,11 +106,18 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             print("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))
         else:
             print("Initializing from scratch.")
+            
+            pre_trained_model = keras.models.load_model("./flower_model")
+            
             self.generator.build(input_shape=self.seed.shape)
-            self.generator.layers[1].set_weights(self.discriminator.layers[2].get_weights())
-            self.generator.layers[3].set_weights(self.discriminator.layers[4].get_weights())
-            self.generator.layers[5].set_weights(self.discriminator.layers[6].get_weights())
-            self.generator.summary()
+            self.generator.layers[1].set_weights(pre_trained_model.layers[2].get_weights())
+            self.generator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
+            self.generator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
+            
+            self.discriminator.build(input_shape=self.seed.shape)
+            self.discriminator.layers[1].set_weights(pre_trained_model.layers[2].get_weights())
+            self.discriminator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
+            self.discriminator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
         # exit()
 
     def make_some_noise(self):
@@ -187,6 +196,23 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 #     activation="tanh",
                 # ),
                 layers.experimental.preprocessing.Rescaling(127.0, offset=127.0),
+            ]
+        )
+        return model
+
+    def make_discriminator_model(self):
+        model = tf.keras.Sequential(
+            [
+                layers.experimental.preprocessing.Rescaling(1.0 / 127.5, offset=-1),
+                layers.Conv2D(16, 3, padding="same", activation="relu"),
+                layers.MaxPooling2D(),
+                layers.Conv2D(32, 3, padding="same", activation="relu"),
+                layers.MaxPooling2D(),
+                layers.Conv2D(64, 3, padding="same", activation="relu"),
+                layers.MaxPooling2D(),
+                layers.Dropout(0.2),                
+                layers.Flatten(),
+                layers.Dense(1),
             ]
         )
         return model

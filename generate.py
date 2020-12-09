@@ -85,7 +85,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         rando = r.astype(int)
         # use your mask to replace values in your input array
         sunflower_array[mask] = rando[mask]
-        # self.sunflower_seed = np.average(tf.expand_dims(sunflower_array, 0), 3)
         self.sunflower_seed = tf.expand_dims(sunflower_array, 0)
 
         self.checkpoint_dir = "./generator_checkpoints"
@@ -236,9 +235,9 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             for i in range(predictions.shape[0]):
                 plt.subplot(4, 4, i+1)
                 if i % 2 == 0:
-                    plt.imshow(predictions[i, :, :, 0].numpy().astype("uint8"), cmap='gray')
+                    plt.imshow(predictions[i, :, :, :].numpy().astype("uint8"), cmap='gray')
                 else:
-                    plt.imshow(predictions[i, :, :, 0].numpy().astype("uint8"))
+                    plt.imshow(predictions[i, :, :, :].numpy().astype("uint8"))
                 plt.axis('off')
             plt.savefig(file_name)
             plt.close()

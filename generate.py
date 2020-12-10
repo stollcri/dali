@@ -39,7 +39,6 @@ def display_time(seconds, granularity=3):
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def __init__(self):
         self.batch_size = 16
-        self.buffer_size = 60000
         self.epochs = 512
         self.epochs_per_checkpoint = 32
         self.checkpoints_to_keep = 3
@@ -48,18 +47,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         self.image_width = 360
         self.image_depth = 3
 
-        self.noise_dim = int((self.image_height + self.image_width) / 2)
-        self.num_examples_to_generate = 16
-
         self.flowers_path = pathlib.Path("./flower_photos/")
-        self.sunflower_path = pathlib.Path("./592px-Red_sunflower.jpg")
 
         self.generator = self.make_generator_model()
-        # self.discriminator = keras.models.load_model("./flower_model")
         self.discriminator = self.make_discriminator_model()
 
-        # We will reuse this seed overtime (so it's easier)
-        # to visualize progress in the animated GIF)
         self.seed = self.make_some_noise()
 
         # self.generator.build(input_shape=self.seed.shape)
@@ -72,20 +64,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
 
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-
-        # sunflower_image = keras.preprocessing.image.load_img(
-        #     self.sunflower_path, target_size=(self.image_height, self.image_width)
-        # )
-        # sunflower_array = keras.preprocessing.image.img_to_array(sunflower_image)
-        # # random boolean mask for which values will be changed
-        # m = np.random.randint(0, 4, size=sunflower_array.shape).astype(np.bool)
-        # mask = np.invert(m)
-        # # random matrix the same shape of your data
-        # r = np.random.rand(*sunflower_array.shape) * np.max(sunflower_array)
-        # rando = r.astype(int)
-        # # use your mask to replace values in your input array
-        # sunflower_array[mask] = rando[mask]
-        # self.sunflower_seed = tf.expand_dims(sunflower_array, 0)
 
         self.checkpoint_dir = "./generator_checkpoints"
         self.checkpoint_prefix = os.path.join(self.checkpoint_dir, "ckpt")
@@ -108,11 +86,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
             pre_trained_model = keras.models.load_model("./flower_model")
 
-            # self.generator.build(input_shape=self.seed.shape)
-            # self.generator.layers[1].set_weights(pre_trained_model.layers[2].get_weights())
-            # self.generator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
-            # self.generator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
-
             self.discriminator.build(input_shape=self.seed.shape)
             self.discriminator.layers[1].set_weights(
                 pre_trained_model.layers[2].get_weights()
@@ -126,61 +99,13 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         # exit()
 
     def make_some_noise(self):
-        # return tf.random.uniform(
-        #     [self.batch_size, self.image_height, self.image_width, self.image_depth],
-        #     minval=0,
-        #     maxval=255,
-        # )
-        # return tf.random.uniform([self.batch_size, (42 * 42 * 1)], minval=0, maxval=255)
         return tf.random.normal([self.batch_size, (42 * 42 * 1)])
 
     def make_generator_model(self):
-        def channelPool(x):
-            return (
-                (0.21 * x[:, :, :, :1])
-                + (0.72 * x[:, :, :, 1:2])
-                + (0.07 * x[:, :, :, -1:])
-            )
-
         model = tf.keras.Sequential(
             [
-                # layers.experimental.preprocessing.Rescaling(
-                #     1.0 / 255,
-                #     input_shape=(self.image_height, self.image_width, self.image_depth),
-                # ),
-                
-                # layers.Conv2D(16, 3, padding="same", activation="relu"),
-                # layers.MaxPooling2D(),
-                # layers.Conv2D(32, 3, padding="same", activation="relu"),
-                # layers.MaxPooling2D(),
-                # layers.Conv2D(64, 3, padding="same", activation="relu"),
-                # layers.MaxPooling2D(),
-                # layers.Dropout(0.2),
-                # layers.experimental.preprocessing.Resizing(
-                #     16,
-                #     16,
-                #     interpolation="bilinear",
-                #     input_shape=(self.image_height, self.image_width, self.image_depth),
-                # ),
-                # layers.Flatten(),
-                # layers.Dense(42 * 42 * 1, activation="relu"),
-
-                # layers.Lambda(
-                #     channelPool,
-                #     input_shape=(self.image_height, self.image_width, self.image_depth),
-                #     output_shape=(360, 360),
-                # ),
-                # layers.experimental.preprocessing.Resizing(
-                #     45,
-                #     45,
-                #     interpolation="bilinear",
-                #     input_shape=(self.image_height, self.image_width, 1),
-                # ),
-                # layers.Reshape((36 * 36 * 1,), input_shape=(36, 36, 1)),
-    
                 layers.Dense(45 * 45 * 32, use_bias=False, input_shape=(42 * 42 * 1,)),
                 layers.BatchNormalization(),
-                # layers.LayerNormalization(),
                 layers.LeakyReLU(),
                 
                 layers.Reshape((45, 45, 32), input_shape=(45 * 45 * 32,)),
@@ -189,21 +114,18 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     32, (5, 5), strides=(1, 1), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
-                # layers.LayerNormalization(),
                 layers.LeakyReLU(),
                 
                 layers.Conv2DTranspose(
                     16, (5, 5), strides=(2, 2), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
-                # layers.LayerNormalization(),
                 layers.LeakyReLU(),
                 
                 layers.Conv2DTranspose(
                     8, (5, 5), strides=(2, 2), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
-                # layers.LayerNormalization(),
                 layers.LeakyReLU(),
                 
                 layers.Conv2DTranspose(
@@ -214,18 +136,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     use_bias=False,
                     activation="sigmoid",
                 ),
-                # layers.BatchNormalization(),
-                # layers.LeakyReLU(),
-                # layers.Conv2DTranspose(
-                #     3,
-                #     (5, 5),
-                #     strides=(1, 1),
-                #     padding="same",
-                #     use_bias=False,
-                #     activation="tanh",
-                # ),
                 layers.experimental.preprocessing.Rescaling(255),
-                # layers.experimental.preprocessing.Rescaling(127.5, offset=127.5),
             ]
         )
         return model
@@ -293,7 +204,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
     # This annotation causes the function to be "compiled".
     @tf.function
     def train_step(self, images):
-        # noise = tf.random.normal([self.batch_size, self.noise_dim])
         noise = self.make_some_noise()
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
@@ -351,13 +261,8 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 "generator_images/seed_{:04d}.png".format(epoch + 1),
                 True,
             )
-            # self.generate_and_save_images(
-            #     self.generator,
-            #     self.sunflower_seed,
-            #     "generator_images/sunflower_seed_{:04d}.png".format(epoch + 1),
-            # )
 
-            # Save the model every 15 epochs
+            # Save the model every n epochs
             if (epoch + 1) % self.epochs_per_checkpoint == 0:
                 self.checkpoint_manager.save()
 
@@ -371,11 +276,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             "generator_images/seed_{:04d}.png".format(epoch),
             True,
         )
-        # self.generate_and_save_images(
-        #     self.generator,
-        #     self.sunflower_seed,
-        #     "generator_images/sunflower_seed_{:04d}.png".format(epoch),
-        # )
 
 
 if __name__ == "__main__":

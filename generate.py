@@ -84,46 +84,45 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         else:
             print("Initializing from scratch.")
 
-            pre_trained_model = keras.models.load_model("./flower_model")
-
-            self.discriminator.build(input_shape=self.seed.shape)
-            self.discriminator.layers[1].set_weights(
-                pre_trained_model.layers[2].get_weights()
-            )
-            self.discriminator.layers[3].set_weights(
-                pre_trained_model.layers[4].get_weights()
-            )
-            self.discriminator.layers[5].set_weights(
-                pre_trained_model.layers[6].get_weights()
-            )
-        # exit()
+#             pre_trained_model = keras.models.load_model("./flower_model")
+# 
+#             self.discriminator.build(input_shape=self.seed.shape)
+#             self.discriminator.layers[1].set_weights(
+#                 pre_trained_model.layers[2].get_weights()
+#             )
+#             self.discriminator.layers[3].set_weights(
+#                 pre_trained_model.layers[4].get_weights()
+#             )
+#             self.discriminator.layers[5].set_weights(
+#                 pre_trained_model.layers[6].get_weights()
+#             )
 
     def make_some_noise(self):
-        return tf.random.normal([self.batch_size, (42 * 42 * 1)])
+        return tf.random.normal([self.batch_size, (48 * 48 * 1)])
 
     def make_generator_model(self):
         model = tf.keras.Sequential(
             [
-                layers.Dense(45 * 45 * 32, use_bias=False, input_shape=(42 * 42 * 1,)),
+                layers.Dense(45 * 45 * 48, use_bias=False, input_shape=(48 * 48 * 1,)),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 
-                layers.Reshape((45, 45, 32), input_shape=(45 * 45 * 32,)),
+                layers.Reshape((45, 45, 48), input_shape=(45 * 45 * 48,)),
                 
                 layers.Conv2DTranspose(
-                    32, (5, 5), strides=(1, 1), padding="same", use_bias=False
+                    48, (5, 5), strides=(1, 1), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 
                 layers.Conv2DTranspose(
-                    16, (5, 5), strides=(2, 2), padding="same", use_bias=False
+                    48, (5, 5), strides=(2, 2), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 
                 layers.Conv2DTranspose(
-                    8, (5, 5), strides=(2, 2), padding="same", use_bias=False
+                    12, (5, 5), strides=(2, 2), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
@@ -148,11 +147,17 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     1.0 / 255,
                     input_shape=(self.image_height, self.image_width, self.image_depth),
                 ),
-                layers.Conv2D(16, 3, padding="same", activation="relu"),
+                # layers.Conv2D(16, 3, padding="same", activation="relu"),
+                # 3 * 2 * 2
+                layers.Conv2D(12, 3, padding="same", activation="relu"),
                 layers.MaxPooling2D(),
-                layers.Conv2D(32, 3, padding="same", activation="relu"),
+                # layers.Conv2D(32, 3, padding="same", activation="relu"),
+                # 3 * 4 * 4 OR 12 * 2 * 2
+                layers.Conv2D(48, 3, padding="same", activation="relu"),
                 layers.MaxPooling2D(),
-                layers.Conv2D(64, 3, padding="same", activation="relu"),
+                # layers.Conv2D(64, 3, padding="same", activation="relu"),
+                # 3 * 8 * 8 OR 48 * 2 * 2
+                layers.Conv2D(192, 3, padding="same", activation="relu"),
                 layers.MaxPooling2D(),
                 layers.Dropout(0.2),
                 layers.Flatten(),

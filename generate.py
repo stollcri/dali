@@ -84,49 +84,59 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         else:
             print("Initializing from scratch.")
 
-#             pre_trained_model = keras.models.load_model("./flower_model")
-# 
-#             self.discriminator.build(input_shape=self.seed.shape)
-#             self.discriminator.layers[1].set_weights(
-#                 pre_trained_model.layers[2].get_weights()
-#             )
-#             self.discriminator.layers[3].set_weights(
-#                 pre_trained_model.layers[4].get_weights()
-#             )
-#             self.discriminator.layers[5].set_weights(
-#                 pre_trained_model.layers[6].get_weights()
-#             )
+    #             pre_trained_model = keras.models.load_model("./flower_model")
+    #
+    #             self.discriminator.build(input_shape=self.seed.shape)
+    #             self.discriminator.layers[1].set_weights(
+    #                 pre_trained_model.layers[2].get_weights()
+    #             )
+    #             self.discriminator.layers[3].set_weights(
+    #                 pre_trained_model.layers[4].get_weights()
+    #             )
+    #             self.discriminator.layers[5].set_weights(
+    #                 pre_trained_model.layers[6].get_weights()
+    #             )
 
     def make_some_noise(self):
-        return tf.random.normal([self.batch_size, (48 * 48 * 1)])
+        return tf.random.normal(
+            [self.batch_size, self.image_height, self.image_width, self.image_depth]
+        )
 
     def make_generator_model(self):
         model = tf.keras.Sequential(
             [
-                layers.Dense(45 * 45 * 48, use_bias=False, input_shape=(48 * 48 * 1,)),
+                layers.experimental.preprocessing.Resizing(
+                    180,
+                    180,
+                    interpolation="bilinear",
+                    input_shape=(self.image_height, self.image_width, self.image_depth),
+                ),
+                layers.Conv1D(1, 1, activation="relu"),
+                layers.experimental.preprocessing.Resizing(
+                    30,
+                    30,
+                    interpolation="bilinear",
+                ),
+                layers.Flatten(),
+                layers.Dense(45 * 45 * 48, use_bias=False),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
-                
                 layers.Reshape((45, 45, 48), input_shape=(45 * 45 * 48,)),
-                
                 layers.Conv2DTranspose(
                     48, (5, 5), strides=(1, 1), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
-                
                 layers.Conv2DTranspose(
                     48, (5, 5), strides=(2, 2), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
-                
                 layers.Conv2DTranspose(
                     12, (5, 5), strides=(2, 2), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
-                
                 layers.Conv2DTranspose(
                     3,
                     (5, 5),

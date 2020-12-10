@@ -38,7 +38,7 @@ def display_time(seconds, granularity=3):
 
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def __init__(self):
-        self.batch_size = 4
+        self.batch_size = 16
         self.buffer_size = 60000
         self.epochs = 512
         self.epochs_per_checkpoint = 32
@@ -349,6 +349,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 self.generator,
                 self.seed,
                 "generator_images/seed_{:04d}.png".format(epoch + 1),
+                True,
             )
             # self.generate_and_save_images(
             #     self.generator,
@@ -368,6 +369,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             self.generator,
             self.seed,
             "generator_images/seed_{:04d}.png".format(epoch),
+            True,
         )
         # self.generate_and_save_images(
         #     self.generator,

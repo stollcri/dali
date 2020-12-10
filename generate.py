@@ -181,7 +181,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         if print_multiple:
             fig = plt.figure(figsize=(6, 6))
             for i in range(predictions.shape[0]):
-                plt.subplot(2, 2, i + 1)
+                plt.subplot(4, 4, i + 1)
                 plt.imshow(predictions[i, :, :, :].numpy().astype("uint8"))
                 plt.axis("off")
             plt.savefig(file_name)

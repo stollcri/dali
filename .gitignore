@@ -1,8 +1,10 @@
 flower_model
 flower_photos
-flower_photos_all
+flower_photos_*
 
 generator_checkpoints/checkpoint
 generator_checkpoints/ckpt-*.*
+generator_checkpoints_*
 generator_images/*.png
 generator_images/*.mp4
+generator_images_*

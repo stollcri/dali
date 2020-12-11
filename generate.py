@@ -41,7 +41,7 @@ def display_time(seconds, granularity=3):
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def __init__(self, checkpoint_dir, source_dir, target_dir):
         self.batch_size = 16
-        self.epochs = 180
+        self.epochs = 512
         self.epochs_per_checkpoint = 32
         self.checkpoints_to_keep = 3
 
@@ -57,9 +57,9 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         self.seed = self.make_some_noise()
 
-        # self.generator.build(input_shape=self.seed.shape)
+        # # self.generator.build(input_shape=self.seed.shape)
         # self.generator.summary()
-        # self.discriminator.build(input_shape=self.seed.shape)
+        # # self.discriminator.build(input_shape=self.seed.shape)
         # self.discriminator.summary()
         # exit()
 
@@ -128,23 +128,33 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 layers.LeakyReLU(),
                 layers.Reshape((45, 45, 48), input_shape=(45 * 45 * 48,)),
                 layers.Conv2DTranspose(
-                    48, (5, 5), strides=(1, 1), padding="same", use_bias=False
+                    48, (3, 1), strides=(1, 1), padding="same", use_bias=False
+                ),
+                layers.Conv2DTranspose(
+                    48, (1, 3), strides=(1, 1), padding="same", use_bias=False, activation="relu"
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    48, (5, 5), strides=(2, 2), padding="same", use_bias=False
+                    48, (3, 1), strides=(1, 1), padding="same", use_bias=False
+                ),
+                layers.Conv2DTranspose(
+                    48, (1, 3), strides=(2, 2), padding="same", use_bias=False, activation="relu"
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    12, (5, 5), strides=(2, 2), padding="same", use_bias=False
+                    12, (3, 1), strides=(1, 1), padding="same", use_bias=False
+                ),
+                layers.Conv2DTranspose(
+                    12, (1, 3), strides=(2, 2), padding="same", use_bias=False, activation="relu"
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
+
                 layers.Conv2DTranspose(
                     3,
-                    (5, 5),
+                    (3, 3),
                     strides=(2, 2),
                     padding="same",
                     use_bias=False,
@@ -164,15 +174,18 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 ),
                 # layers.Conv2D(16, 3, padding="same", activation="relu"),
                 # 3 * 2 * 2
-                layers.Conv2D(12, 3, padding="same", activation="relu"),
+                layers.Conv2D(12, (3, 1), padding="same", activation="relu"),
+                layers.Conv2D(12, (1, 3), padding="same", activation="relu"),
                 layers.MaxPooling2D(),
                 # layers.Conv2D(32, 3, padding="same", activation="relu"),
                 # 3 * 4 * 4 OR 12 * 2 * 2
-                layers.Conv2D(48, 3, padding="same", activation="relu"),
+                layers.Conv2D(48, (3, 1), padding="same", activation="relu"),
+                layers.Conv2D(48, (1, 3), padding="same", activation="relu"),
                 layers.MaxPooling2D(),
                 # layers.Conv2D(64, 3, padding="same", activation="relu"),
                 # 3 * 8 * 8 OR 48 * 2 * 2
-                layers.Conv2D(192, 3, padding="same", activation="relu"),
+                layers.Conv2D(192, (3, 1), padding="same", activation="relu"),
+                layers.Conv2D(192, (1, 3), padding="same", activation="relu"),
                 layers.MaxPooling2D(),
                 layers.Dropout(0.2),
                 layers.Flatten(),

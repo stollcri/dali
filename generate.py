@@ -39,7 +39,7 @@ def display_time(seconds, granularity=3):
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def __init__(self):
         self.batch_size = 16
-        self.epochs = 512
+        self.epochs = 400
         self.epochs_per_checkpoint = 32
         self.checkpoints_to_keep = 3
 

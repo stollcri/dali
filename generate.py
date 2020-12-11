@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import argparse
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -37,7 +39,7 @@ def display_time(seconds, granularity=3):
 
 
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
-    def __init__(self):
+    def __init__(self, checkpoint_dir, source_dir, target_dir):
         self.batch_size = 16
         self.epochs = 400
         self.epochs_per_checkpoint = 32
@@ -47,7 +49,8 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         self.image_width = 360
         self.image_depth = 3
 
-        self.flowers_path = pathlib.Path("./flower_photos/")
+        self.source_images_path = pathlib.Path(source_dir)
+        self.target_images_path = target_dir
 
         self.generator = self.make_generator_model()
         self.discriminator = self.make_discriminator_model()
@@ -65,7 +68,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
-        self.checkpoint_dir = "./generator_checkpoints"
+        self.checkpoint_dir = checkpoint_dir
         self.checkpoint_prefix = os.path.join(self.checkpoint_dir, "ckpt")
         self.checkpoint = tf.train.Checkpoint(
             generator_optimizer=self.generator_optimizer,
@@ -80,9 +83,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         )
         self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint)
         if self.checkpoint_manager.latest_checkpoint:
-            print("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))
+            logging.info(
+                "Restored from {}".format(self.checkpoint_manager.latest_checkpoint)
+            )
         else:
-            print("Initializing from scratch.")
+            logging.info("Initializing from scratch.")
 
     #             pre_trained_model = keras.models.load_model("./flower_model")
     #
@@ -191,7 +196,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         predictions = model(input, training=False)
 
         preds = predictions[0, :, :, :].numpy()
-        print(f"Results range: {np.min(preds)} - {np.max(preds)}")
+        logging.debug(f"Results range: {np.min(preds)} - {np.max(preds)}")
 
         if print_multiple:
             fig = plt.figure(figsize=(6, 6))
@@ -248,7 +253,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def train(self, dataset=None, epochs=None):
         if dataset is None:
             dataset = tf.keras.preprocessing.image_dataset_from_directory(
-                self.flowers_path,
+                self.source_images_path,
                 image_size=(self.image_height, self.image_width),
                 batch_size=self.batch_size,
             )
@@ -270,10 +275,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
             # Produce images for the GIF as we go
             display.clear_output(wait=True)
+            image_file_name = "seed_{:04d}.png".format(epoch + 1)
             self.generate_and_save_images(
                 self.generator,
                 self.seed,
-                "generator_images/seed_{:04d}.png".format(epoch + 1),
+                os.path.join(self.target_images_path, image_file_name),
                 True,
             )
 
@@ -281,18 +287,63 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             if (epoch + 1) % self.epochs_per_checkpoint == 0:
                 self.checkpoint_manager.save()
 
-            print(f"Epoch completed in {display_time(time.time() - start)}")
+            logging.info(f"Epoch completed in {display_time(time.time() - start)}")
 
         # Generate after the final epoch
         display.clear_output(wait=True)
+        image_file_name = "seed_{:04d}.png".format(epoch + 1)
         self.generate_and_save_images(
             self.generator,
             self.seed,
-            "generator_images/seed_{:04d}.png".format(epoch),
+            os.path.join(self.target_images_path, image_file_name),
             True,
         )
 
 
 if __name__ == "__main__":
-    dcgan = DeepConvolutionalGenerativeAdversarialNetwork()
+    parser = argparse.ArgumentParser(
+        description="Generate images using Deep Convolutional Generative Adversarial Network"
+    )
+    parser.add_argument(
+        "-c",
+        "--checkpoint-dir",
+        help="Directory to store checkpoints",
+        dest="checkpoint_dir",
+        default=None,
+    )
+    parser.add_argument(
+        "-s",
+        "--source-dir",
+        help="Directory of class directories",
+        dest="source_dir",
+        default=None,
+    )
+    parser.add_argument(
+        "-t",
+        "--target-dir",
+        help="Directory of resulting images",
+        dest="target_dir",
+        default=None,
+    )
+    parser.add_argument(
+        "-v", "--verbose", help="verbose output", dest="verbose", action="store_true"
+    )
+    args = parser.parse_args()
+
+    if (
+        args.checkpoint_dir is None
+        or args.source_dir is None
+        or args.target_dir is None
+    ):
+        parser.print_usage()
+        exit()
+
+    if args.verbose:
+        logging.basicConfig(format="%(message)s", level=logging.DEBUG)
+    else:
+        logging.basicConfig(format="%(message)s", level=logging.INFO)
+
+    dcgan = DeepConvolutionalGenerativeAdversarialNetwork(
+        args.checkpoint_dir, args.source_dir, args.target_dir
+    )
     dcgan.train()

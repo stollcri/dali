@@ -128,10 +128,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 layers.LeakyReLU(),
                 layers.Reshape((45, 45, 48), input_shape=(45 * 45 * 48,)),
                 layers.Conv2DTranspose(
-                    48, (3, 1), strides=(1, 1), padding="same", use_bias=False
-                ),
-                layers.Conv2DTranspose(
-                    48, (1, 3), strides=(1, 1), padding="same", use_bias=False, activation="relu"
+                    48, (5, 1), strides=(1, 1), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
@@ -144,10 +141,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    12, (3, 1), strides=(1, 1), padding="same", use_bias=False
-                ),
-                layers.Conv2DTranspose(
-                    12, (1, 3), strides=(2, 2), padding="same", use_bias=False, activation="relu"
+                    12, (5, 1), strides=(1, 1), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),

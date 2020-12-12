@@ -39,7 +39,7 @@ def display_time(seconds, granularity=3):
 
 
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
-    def __init__(self, checkpoint_dir, source_dir, target_dir):
+    def __init__(self, source_dir, checkpoint_dir, target_dir):
         self.batch_size = 16
         self.epochs = 512
         self.epochs_per_checkpoint = 32
@@ -318,17 +318,17 @@ if __name__ == "__main__":
         description="Generate images using Deep Convolutional Generative Adversarial Network"
     )
     parser.add_argument(
-        "-c",
-        "--checkpoint-dir",
-        help="Directory to store checkpoints",
-        dest="checkpoint_dir",
-        default=None,
-    )
-    parser.add_argument(
         "-s",
         "--source-dir",
         help="Directory of class directories",
         dest="source_dir",
+        default=None,
+    )
+    parser.add_argument(
+        "-c",
+        "--checkpoint-dir",
+        help="Directory to store checkpoints",
+        dest="checkpoint_dir",
         default=None,
     )
     parser.add_argument(
@@ -357,6 +357,6 @@ if __name__ == "__main__":
         logging.basicConfig(format="%(message)s", level=logging.INFO)
 
     dcgan = DeepConvolutionalGenerativeAdversarialNetwork(
-        args.checkpoint_dir, args.source_dir, args.target_dir
+        args.source_dir, args.checkpoint_dir, args.target_dir
     )
     dcgan.train()

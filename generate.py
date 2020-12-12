@@ -57,11 +57,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         self.seed = self.make_some_noise()
 
-        # self.generator.build(input_shape=self.seed.shape)
-        self.generator.summary()
-        # self.discriminator.build(input_shape=self.seed.shape)
-        self.discriminator.summary()
-        exit()
+        # # self.generator.build(input_shape=self.seed.shape)
+        # self.generator.summary()
+        # # self.discriminator.build(input_shape=self.seed.shape)
+        # self.discriminator.summary()
+        # exit()
 
         self.generator_optimizer = tf.keras.optimizers.Adam(1e-4)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)

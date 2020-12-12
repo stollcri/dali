@@ -174,18 +174,15 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 ),
                 # layers.Conv2D(16, 3, padding="same", activation="relu"),
                 # 3 * 2 * 2
-                layers.Conv2D(12, (3, 1), padding="same", activation="relu"),
-                layers.Conv2D(12, (1, 3), padding="same", activation="relu"),
+                layers.Conv2D(12, (3, 3), padding="same", activation="relu"),
                 layers.MaxPooling2D(),
                 # layers.Conv2D(32, 3, padding="same", activation="relu"),
                 # 3 * 4 * 4 OR 12 * 2 * 2
-                layers.Conv2D(48, (3, 1), padding="same", activation="relu"),
-                layers.Conv2D(48, (1, 3), padding="same", activation="relu"),
+                layers.Conv2D(48, (3, 3), padding="same", activation="relu"),
                 layers.MaxPooling2D(),
                 # layers.Conv2D(64, 3, padding="same", activation="relu"),
                 # 3 * 8 * 8 OR 48 * 2 * 2
-                layers.Conv2D(192, (3, 1), padding="same", activation="relu"),
-                layers.Conv2D(192, (1, 3), padding="same", activation="relu"),
+                layers.Conv2D(192, (3, 3), padding="same", activation="relu"),
                 layers.MaxPooling2D(),
                 layers.Dropout(0.2),
                 layers.Flatten(),

@@ -41,9 +41,9 @@ def display_time(seconds, granularity=3):
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def __init__(self, source_dir, checkpoint_dir, target_dir):
         self.batch_size = 16
-        self.epochs = 512
+        self.epochs = 936
         self.epochs_per_checkpoint = 32
-        self.checkpoints_to_keep = 3
+        self.checkpoints_to_keep = 2
 
         self.image_height = 360
         self.image_width = 360
@@ -202,6 +202,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     padding="same",
                 ),
                 layers.MaxPooling2D(),
+                layers.Dropout(0.2),
                 # 3 * 4 * 4 OR 12 * 2 * 2
                 layers.Conv2D(
                     48,
@@ -211,6 +212,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     padding="same",
                 ),
                 layers.MaxPooling2D(),
+                layers.Dropout(0.2),
                 # 3 * 8 * 8 OR 48 * 2 * 2
                 layers.Conv2D(
                     192,
@@ -220,8 +222,9 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     padding="same",
                 ),
                 layers.MaxPooling2D(),
-                layers.Dropout(0.2),
+                layers.Dropout(0.5),
                 layers.Flatten(),
+                layers.Dense(128, activation="relu"),
                 layers.Dense(1),
             ]
         )

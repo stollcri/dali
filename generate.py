@@ -296,6 +296,8 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             zip(gradients_of_discriminator, self.discriminator.trainable_variables)
         )
 
+        return gen_loss, disc_loss
+
     def train(self, dataset=None, epochs=None):
         if dataset is None:
             dataset = tf.keras.preprocessing.image_dataset_from_directory(
@@ -313,9 +315,13 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         for epoch in range(epochs):
             start = time.time()
 
-            bar = FillingCirclesBar(f"Epoch {epoch}/{epochs}", max=len(dataset))
+            bar = FillingCirclesBar(
+                f"Epoch {epoch}/{epochs} Loss: gen {0.0:6.5f}, disc {0.0:6.5f}",
+                max=len(dataset),
+            )
             for image_batch in dataset:
-                self.train_step(image_batch)
+                gen_loss, disc_loss = self.train_step(image_batch)
+                bar.message = f"Epoch {epoch}/{epochs} Loss: gen {gen_loss.numpy():6.5f}, disc {disc_loss.numpy():6.5f}"
                 bar.next()
             bar.finish()
 
@@ -333,7 +339,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             if (epoch + 1) % self.epochs_per_checkpoint == 0:
                 self.checkpoint_manager.save()
 
-            logging.info(f"Epoch completed in {display_time(time.time() - start)}")
+            logging.debug(f"Epoch completed in {display_time(time.time() - start)}")
 
         # Generate after the final epoch
         display.clear_output(wait=True)

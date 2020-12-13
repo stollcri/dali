@@ -133,29 +133,53 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    48, (3, 1), strides=(2, 1), padding="same", use_bias=False
+                    48,
+                    (3, 1),
+                    strides=(2, 1),
+                    activation="relu",
+                    data_format="channels_last",
+                    padding="same",
+                    use_bias=False,
                 ),
                 layers.Conv2DTranspose(
-                    48, (1, 3), strides=(1, 2), padding="same", use_bias=False, activation="relu"
+                    48,
+                    (1, 3),
+                    strides=(1, 2),
+                    activation="relu",
+                    data_format="channels_last",
+                    padding="same",
+                    use_bias=False,
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    12, (3, 1), strides=(2, 1), padding="same", use_bias=False
+                    12,
+                    (3, 1),
+                    strides=(2, 1),
+                    activation="relu",
+                    data_format="channels_last",
+                    padding="same",
+                    use_bias=False,
                 ),
                 layers.Conv2DTranspose(
-                    12, (1, 3), strides=(1, 2), padding="same", use_bias=False, activation="relu"
+                    12,
+                    (1, 3),
+                    strides=(1, 2),
+                    activation="relu",
+                    data_format="channels_last",
+                    padding="same",
+                    use_bias=False,
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
-
                 layers.Conv2DTranspose(
                     3,
                     (3, 3),
                     strides=(2, 2),
+                    activation="sigmoid",
+                    data_format="channels_last",
                     padding="same",
                     use_bias=False,
-                    activation="sigmoid",
                 ),
                 layers.experimental.preprocessing.Rescaling(255),
             ]
@@ -169,17 +193,32 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     1.0 / 255,
                     input_shape=(self.image_height, self.image_width, self.image_depth),
                 ),
-                # layers.Conv2D(16, 3, padding="same", activation="relu"),
                 # 3 * 2 * 2
-                layers.Conv2D(12, (3, 3), padding="same", activation="relu"),
+                layers.Conv2D(
+                    12,
+                    (3, 3),
+                    activation="relu",
+                    data_format="channels_last",
+                    padding="same",
+                ),
                 layers.MaxPooling2D(),
-                # layers.Conv2D(32, 3, padding="same", activation="relu"),
                 # 3 * 4 * 4 OR 12 * 2 * 2
-                layers.Conv2D(48, (3, 3), padding="same", activation="relu"),
+                layers.Conv2D(
+                    48,
+                    (3, 3),
+                    activation="relu",
+                    data_format="channels_last",
+                    padding="same",
+                ),
                 layers.MaxPooling2D(),
-                # layers.Conv2D(64, 3, padding="same", activation="relu"),
                 # 3 * 8 * 8 OR 48 * 2 * 2
-                layers.Conv2D(192, (3, 3), padding="same", activation="relu"),
+                layers.Conv2D(
+                    192,
+                    (3, 3),
+                    activation="relu",
+                    data_format="channels_last",
+                    padding="same",
+                ),
                 layers.MaxPooling2D(),
                 layers.Dropout(0.2),
                 layers.Flatten(),

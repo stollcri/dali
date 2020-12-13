@@ -25,6 +25,7 @@ data_dir = pathlib.Path("./flower_photos_all")
 batch_size = 64
 img_height = 360  # 180
 img_width = 360  # 180
+img_depth = 3
 
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
     data_dir,
@@ -35,7 +36,7 @@ train_ds = tf.keras.preprocessing.image_dataset_from_directory(
     batch_size=batch_size,
 )
 train_class_names = train_ds.class_names
-print(train_class_names)
+# print(train_class_names)
 
 val_ds = tf.keras.preprocessing.image_dataset_from_directory(
     data_dir,
@@ -46,7 +47,7 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
     batch_size=batch_size,
 )
 val_class_names = val_ds.class_names
-print(val_class_names)
+# print(val_class_names)
 
 # plt.figure(figsize=(10, 10))
 # for images, labels in train_ds.take(1):
@@ -97,17 +98,59 @@ num_classes = len(train_class_names)
 #     ]
 # )
 
+# model = Sequential(
+#     [
+#         data_augmentation,
+#         layers.experimental.preprocessing.Rescaling(1.0 / 255),
+#         layers.Conv2D(16, 3, padding="same", activation="relu"),
+#         layers.MaxPooling2D(),
+#         layers.Conv2D(32, 3, padding="same", activation="relu"),
+#         layers.MaxPooling2D(),
+#         layers.Conv2D(64, 3, padding="same", activation="relu"),
+#         layers.MaxPooling2D(),
+#         layers.Dropout(0.2),
+#         layers.Flatten(),
+#         layers.Dense(128, activation="relu"),
+#         layers.Dense(num_classes),
+#     ]
+# )
 model = Sequential(
     [
         data_augmentation,
-        layers.experimental.preprocessing.Rescaling(1.0 / 255),
-        layers.Conv2D(16, 3, padding="same", activation="relu"),
-        layers.MaxPooling2D(),
-        layers.Conv2D(32, 3, padding="same", activation="relu"),
-        layers.MaxPooling2D(),
-        layers.Conv2D(64, 3, padding="same", activation="relu"),
+        layers.experimental.preprocessing.Rescaling(
+            1.0 / 255,
+            input_shape=(img_height, img_width, img_depth),
+        ),
+        # 3 * 2 * 2
+        layers.Conv2D(
+            12,
+            (3, 3),
+            activation="relu",
+            data_format="channels_last",
+            padding="same",
+        ),
         layers.MaxPooling2D(),
         layers.Dropout(0.2),
+        # 3 * 4 * 4 OR 12 * 2 * 2
+        layers.Conv2D(
+            48,
+            (3, 3),
+            activation="relu",
+            data_format="channels_last",
+            padding="same",
+        ),
+        layers.MaxPooling2D(),
+        layers.Dropout(0.2),
+        # 3 * 8 * 8 OR 48 * 2 * 2
+        layers.Conv2D(
+            192,
+            (3, 3),
+            activation="relu",
+            data_format="channels_last",
+            padding="same",
+        ),
+        layers.MaxPooling2D(),
+        layers.Dropout(0.5),
         layers.Flatten(),
         layers.Dense(128, activation="relu"),
         layers.Dense(num_classes),

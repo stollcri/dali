@@ -115,49 +115,6 @@ num_classes = len(train_class_names)
 #     ]
 # )
 
-# model = Sequential(
-#     [
-#         data_augmentation,
-#         layers.experimental.preprocessing.Rescaling(
-#             1.0 / 255,
-#             input_shape=(img_height, img_width, img_depth),
-#         ),
-#         # 3 * 2 * 2
-#         layers.Conv2D(
-#             12,
-#             (3, 3),
-#             activation="relu",
-#             data_format="channels_last",
-#             padding="same",
-#         ),
-#         layers.MaxPooling2D(),
-#         layers.Dropout(0.2),
-#         # 3 * 4 * 4 OR 12 * 2 * 2
-#         layers.Conv2D(
-#             48,
-#             (3, 3),
-#             activation="relu",
-#             data_format="channels_last",
-#             padding="same",
-#         ),
-#         layers.MaxPooling2D(),
-#         layers.Dropout(0.2),
-#         # 3 * 8 * 8 OR 48 * 2 * 2
-#         layers.Conv2D(
-#             192,
-#             (3, 3),
-#             activation="relu",
-#             data_format="channels_last",
-#             padding="same",
-#         ),
-#         layers.MaxPooling2D(),
-#         layers.Dropout(0.5),
-#         layers.Flatten(),
-#         layers.Dense(128, activation="relu"),
-#         layers.Dense(num_classes),
-#     ]
-# )
-
 model = Sequential(
     [
         data_augmentation,
@@ -165,36 +122,76 @@ model = Sequential(
             1.0 / 255,
             input_shape=(img_height, img_width, img_depth),
         ),
+        # 3 * 2 * 2
         layers.Conv2D(
-            64, 3, activation="relu", data_format="channels_last", padding="same"
+            12,
+            (3, 3),
+            activation="relu",
+            data_format="channels_last",
+            padding="same",
         ),
-        layers.BatchNormalization(),
+        layers.MaxPooling2D(),
+        layers.Dropout(0.2),
+        # 3 * 4 * 4 OR 12 * 2 * 2
         layers.Conv2D(
-            64, 3, activation="relu", data_format="channels_last", padding="same"
+            48,
+            (3, 3),
+            activation="relu",
+            data_format="channels_last",
+            padding="same",
         ),
-        layers.MaxPooling2D((2, 2)),
-        layers.Dropout(0.25),
+        layers.MaxPooling2D(),
+        layers.Dropout(0.2),
+        # 3 * 8 * 8 OR 48 * 2 * 2
         layers.Conv2D(
-            32, 3, activation="relu", data_format="channels_last", padding="same"
+            192,
+            (3, 3),
+            activation="relu",
+            data_format="channels_last",
+            padding="same",
         ),
-        layers.BatchNormalization(),
-        layers.Conv2D(
-            32, 3, activation="relu", data_format="channels_last", padding="same"
-        ),
-        layers.BatchNormalization(),
-        layers.Conv2D(
-            8, 3, activation="relu", data_format="channels_last", padding="same"
-        ),
-        layers.MaxPooling2D((2, 2)),
-        layers.Dropout(0.25),
+        layers.MaxPooling2D(),
+        layers.Dropout(0.5),
         layers.Flatten(),
-        layers.Dense(512, activation="relu"),
-        layers.Dropout(0.5),
-        layers.Dense(256, activation="relu"),
-        layers.Dropout(0.5),
-        layers.Dense(num_classes, activation="relu"),
+        layers.Dense(128, activation="relu"),
+        layers.Dense(num_classes),
     ]
 )
+
+# model = Sequential(
+#     [
+#         data_augmentation,
+#         layers.experimental.preprocessing.Rescaling(
+#             1.0 / 255,
+#             input_shape=(img_height, img_width, img_depth),
+#         ),
+#         layers.experimental.preprocessing.Resizing(
+#             180,
+#             180,
+#             interpolation="bilinear",
+#         ),
+# 
+#         layers.Conv2D(32, 3, activation="relu", data_format="channels_last", padding='same'),
+#         layers.BatchNormalization(),
+#         layers.Conv2D(32, 3, activation="relu", data_format="channels_last", padding='same'),
+#         layers.MaxPooling2D((2, 2)),
+#         layers.Dropout(0.25),
+#         
+#         layers.Conv2D(64, 3, activation="relu", data_format="channels_last", padding='same'),
+#         layers.BatchNormalization(),
+#         layers.Conv2D(64, 3, activation="relu", data_format="channels_last", padding='same'),
+#         layers.BatchNormalization(),
+#         layers.Conv2D(8, 3, activation="relu", data_format="channels_last", padding='same'),
+#         layers.MaxPooling2D((2, 2)),
+#         layers.Dropout(0.25),
+#         
+#         layers.Flatten(),
+#         layers.Dense(512, activation="relu"),
+#         layers.Dropout(0.5),
+#         layers.Dense(256, activation="relu"),
+#         layers.Dense(num_classes, activation="softmax"),
+#     ]
+# )
 
 model.compile(
     optimizer="adam",

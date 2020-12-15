@@ -22,7 +22,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 data_dir = pathlib.Path("./flower_photos_all")
 
-batch_size = 64
+batch_size = 16
 img_height = 360  # 180
 img_width = 360  # 180
 img_depth = 3
@@ -166,29 +166,20 @@ model = Sequential(
             input_shape=(img_height, img_width, img_depth),
         ),
         layers.Conv2D(
-            360, 3, activation="relu", data_format="channels_last", padding="same"
+            64, 3, activation="relu", data_format="channels_last", padding="same"
         ),
         layers.BatchNormalization(),
         layers.Conv2D(
-            360, 3, activation="relu", data_format="channels_last", padding="same"
+            64, 3, activation="relu", data_format="channels_last", padding="same"
         ),
         layers.MaxPooling2D((2, 2)),
         layers.Dropout(0.25),
         layers.Conv2D(
-            180, 3, activation="relu", data_format="channels_last", padding="same"
+            32, 3, activation="relu", data_format="channels_last", padding="same"
         ),
         layers.BatchNormalization(),
         layers.Conv2D(
-            180, 3, activation="relu", data_format="channels_last", padding="same"
-        ),
-        layers.MaxPooling2D((2, 2)),
-        layers.Dropout(0.25),
-        layers.Conv2D(
-            90, 3, activation="relu", data_format="channels_last", padding="same"
-        ),
-        layers.BatchNormalization(),
-        layers.Conv2D(
-            90, 3, activation="relu", data_format="channels_last", padding="same"
+            32, 3, activation="relu", data_format="channels_last", padding="same"
         ),
         layers.BatchNormalization(),
         layers.Conv2D(

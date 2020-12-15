@@ -319,12 +319,12 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             start = time.time()
 
             bar = FillingCirclesBar(
-                f"Epoch {epoch}/{epochs} Loss: gen {0.0:6.5f}, disc {0.0:6.5f}",
+                f"Epoch {epoch}/{epochs} Loss: gen {0.0:7.5f}, disc {0.0:7.5f}",
                 max=len(dataset),
             )
             for image_batch in dataset:
                 gen_loss, disc_loss = self.train_step(image_batch)
-                bar.message = f"Epoch {epoch}/{epochs} Loss: gen {gen_loss.numpy():6.5f}, disc {disc_loss.numpy():6.5f}"
+                bar.message = f"Epoch {epoch}/{epochs} Loss: gen {gen_loss.numpy():7.5f}, disc {disc_loss.numpy():7.5f}"
                 bar.next()
             bar.finish()
 

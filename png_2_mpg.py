@@ -7,8 +7,8 @@ import imageio
 
 def create_mp4(path, name):
 	file_list = []
-	for file in os.listdir(path):
-		if file.startswith(name):
+	for index, file in enumerate(os.listdir(path)):
+		if index % 8 == 0 and file.startswith(name):
 			complete_path = os.path.join(path, file)
 			file_list.append(complete_path)
 	
@@ -22,5 +22,5 @@ def create_mp4(path, name):
 	writer.close()
 
 if __name__ == "__main__":
-	create_mp4("./generator_images/", "seed")
-	create_mp4("./generator_images/", "sunflower_seed")
+	create_mp4("./unicode_emojis_generator_images2", "seed")
+	# create_mp4("./generator_images/", "sunflower_seed")

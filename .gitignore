@@ -1,6 +1,5 @@
-flower_model
-flower_photos
-flower_photos_*
+source_images/**
+!source_images/.gitkeep
 
 generator_checkpoints/checkpoint
 generator_checkpoints/ckpt-*.*
@@ -8,3 +7,6 @@ generator_checkpoints_*
 generator_images/*.png
 generator_images/*.mp4
 generator_images_*
+
+.pylintrc
+.python-version

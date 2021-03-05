@@ -1,10 +1,16 @@
+IMAGE_SQUARE_SIZE := 90
+TARGET_DATASET := line_faces
+
 clean:
-	rm -f ./generator_images/*.png
-	rm -f ./generator_images/*.mp4
-	rm -f ./generator_checkpoints/c*
+	rm -f ./generator_images_${TARGET_DATASET}/*.jpg
+	rm -f ./generator_images_${TARGET_DATASET}/*.png
+	rm -f ./generator_images_${TARGET_DATASET}/*.mp4
+	rm -f ./generator_checkpoints_${TARGET_DATASET}/c*
 
 generate:
-	./generate.py \
-	--source-dir ./flower_photos_some/ \
-	--checkpoint-dir ./generator_checkpoints \
-	--target-dir ./generator_images
+	mkdir -p generator_checkpoints_${TARGET_DATASET}
+	mkdir -p generator_images_${TARGET_DATASET}
+	./generate_${IMAGE_SQUARE_SIZE}.py -v \
+	--source-dir ./source_images/ \
+	--checkpoint-dir ./generator_checkpoints_${TARGET_DATASET} \
+	--target-dir ./generator_images_${TARGET_DATASET}

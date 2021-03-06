@@ -1,19 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import matplotlib
+import mplcairo
 import os
-from PIL import Image, ImageDraw, ImageFont
 import random
 
+import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
+prop = FontProperties(fname='/System/Library/Fonts/Apple Color Emoji.ttc', size=96)
 
 def create_image(path, name, text):
-	img = Image.new("RGB", (90,90), color="white")
-	font = ImageFont.truetype("fonts/Symbola.ttf", 90)
-	drawing = ImageDraw.Draw(img)
-	drawing.text((0,0), text, fill=(0,0,0), font=font)
-	img.save(os.path.join(path,name))
+	matplotlib.rcParams.update({'font.size': 22})
+	plt.figure(figsize=(1, 1))
+	plt.text(0, 0, text, fontproperties=prop)
+	plt.axis('off')
+	plt.savefig(os.path.join(path,name), bbox_inches='tight')
+	plt.close()
 
 if __name__ == "__main__":
+	print('Default backend: ' + matplotlib.get_backend()) 
+	matplotlib.use("module://mplcairo.macosx")
+	print('Backend is now ' + matplotlib.get_backend())
+
 	# emoji_list = ["🐶", "😆", "😬", "🐱", "😠", "😯", "😺", "👽", "💀", "🤡", "🤖", "🐻‍"]
 	emoji_list = [
 		'\U0001F479',
@@ -23,16 +32,16 @@ if __name__ == "__main__":
 		'\U0001F47E',
 		'\U0001F47F',
 		'\U0001F480',
-		'\U0001F48B',
-		'\U0001F48C',
-		'\U0001F493',
-		'\U0001F495',
-		'\U0001F496',
-		'\U0001F497',
-		'\U0001F498',
-		'\U0001F49D',
-		'\U0001F49E',
-		'\U0001F4A9',
+		# '\U0001F48B',
+		# '\U0001F48C',
+		# '\U0001F493',
+		# '\U0001F495',
+		# '\U0001F496',
+		# '\U0001F497',
+		# '\U0001F498',
+		# '\U0001F49D',
+		# '\U0001F49E',
+		# '\U0001F4A9',
 		'\U0001F600',
 		'\U0001F601',
 		'\U0001F602',
@@ -116,4 +125,4 @@ if __name__ == "__main__":
 	]
 	for idx,text in enumerate(emoji_list):
 		for sub_idx in range(0,1):
-			create_image("./emoji_images_unicode/", f"created_image_{idx}_{sub_idx}.jpg", text)
+			create_image("./source_images/emoji_images_unicode/", f"created_image_{idx}_{sub_idx}.jpg", text)

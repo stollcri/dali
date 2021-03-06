@@ -1,4 +1,4 @@
-IMAGE_SQUARE_SIZE := 90
+IMAGE_SQUARE_SIZE := 720
 TARGET_DATASET := line_faces
 
 clean:
@@ -11,6 +11,6 @@ generate:
 	mkdir -p generator_checkpoints_${TARGET_DATASET}
 	mkdir -p generator_images_${TARGET_DATASET}
 	./generate_${IMAGE_SQUARE_SIZE}.py -v \
-	--source-dir ./source_images/ \
+	--source-dir ./source_images/${TARGET_DATASET}/ \
 	--checkpoint-dir ./generator_checkpoints_${TARGET_DATASET} \
 	--target-dir ./generator_images_${TARGET_DATASET}

@@ -7,6 +7,15 @@ clean:
 	rm -f ./generator_images_${TARGET_DATASET}/*.mp4
 	rm -f ./generator_checkpoints_${TARGET_DATASET}/c*
 
+print:
+	@mkdir -p generated_checkpoints/${TARGET_DATASET}
+	@mkdir -p generated_images/${TARGET_DATASET}
+	
+	./generate_${IMAGE_SQUARE_SIZE}.py -p -v \
+	--source-dir ./source_images/${TARGET_DATASET}/ \
+	--checkpoint-dir ./generated_checkpoints/${TARGET_DATASET} \
+	--target-dir ./generated_images/${TARGET_DATASET}
+	
 generate:
 	@mkdir -p generated_checkpoints/${TARGET_DATASET}
 	@mkdir -p generated_images/${TARGET_DATASET}
@@ -15,3 +24,13 @@ generate:
 	--source-dir ./source_images/${TARGET_DATASET}/ \
 	--checkpoint-dir ./generated_checkpoints/${TARGET_DATASET} \
 	--target-dir ./generated_images/${TARGET_DATASET}
+	
+draw:
+	./draw_${IMAGE_SQUARE_SIZE}.py -v \
+	./generated_checkpoints/${TARGET_DATASET} \
+	./generated_images/${TARGET_DATASET}/${TARGET_DATASET}.jpg
+	
+draw-saved:
+	./draw_${IMAGE_SQUARE_SIZE}.py -v \
+	./saved_models/flower_photos_some_a/generated_checkpoint/ \
+	./saved_models/flower_photos_some_a/generated_images/${TARGET_DATASET}.jpg

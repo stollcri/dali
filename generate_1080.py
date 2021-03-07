@@ -39,7 +39,7 @@ def display_time(seconds, granularity=3):
 
 
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
-    def __init__(self, source_dir, checkpoint_dir, target_dir):
+    def __init__(self, source_dir, checkpoint_dir, target_dir, print_only):
         self.batch_size = 16
         self.epochs = 2800
         self.epochs_per_checkpoint = 32
@@ -57,11 +57,12 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         self.seed = self.make_some_noise()
 
-        # # self.generator.build(input_shape=self.seed.shape)
-        # self.generator.summary()
-        # # self.discriminator.build(input_shape=self.seed.shape)
-        # self.discriminator.summary()
-        # exit()
+        if print_only:
+            # self.generator.build(input_shape=self.seed.shape)
+            self.generator.summary()
+            # self.discriminator.build(input_shape=self.seed.shape)
+            self.discriminator.summary()
+            exit()
 
         self.generator_optimizer = tf.keras.optimizers.Adam(1e-4)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
@@ -423,6 +424,9 @@ if __name__ == "__main__":
         default=None,
     )
     parser.add_argument(
+        "-p", "--print", help="print model structure and exit", dest="print_only", action="store_true"
+    )
+    parser.add_argument(
         "-v", "--verbose", help="verbose output", dest="verbose", action="store_true"
     )
     args = parser.parse_args()
@@ -441,6 +445,6 @@ if __name__ == "__main__":
         logging.basicConfig(format="%(message)s", level=logging.INFO)
 
     dcgan = DeepConvolutionalGenerativeAdversarialNetwork(
-        args.source_dir, args.checkpoint_dir, args.target_dir
+        args.source_dir, args.checkpoint_dir, args.target_dir, args.print_only
     )
     dcgan.train()

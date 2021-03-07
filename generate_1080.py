@@ -41,7 +41,7 @@ def display_time(seconds, granularity=3):
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def __init__(self, source_dir, checkpoint_dir, target_dir):
         self.batch_size = 16
-        self.epochs = 936
+        self.epochs = 2800
         self.epochs_per_checkpoint = 32
         self.checkpoints_to_keep = 2
 
@@ -111,20 +111,12 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         model = tf.keras.Sequential(
             [
                 layers.experimental.preprocessing.Resizing(
-                    180,
-                    180,
+                    20,
+                    20,
                     interpolation="bilinear",
                     input_shape=(self.image_height, self.image_width, self.image_depth),
                 ),
-				# 180 * 180 * 3 = 97,200
-                layers.Conv1D(1, 1, activation="relu"),
-				# 180 * 180 * 1 = 32,400
-                layers.experimental.preprocessing.Resizing(
-                    30,
-                    30,
-                    interpolation="bilinear",
-                ),
-				# 30 * 30 * 1 = 2,025
+				# 20 * 20 * 3 = 1,200
                 layers.Flatten(),
                 layers.Dense(45 * 45 * 36, use_bias=False),
 				# 45 * 45 * 36 = 72,900
@@ -198,27 +190,15 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    6,
-                    (3, 1),
-                    strides=(2, 1),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                    use_bias=False,
-                ),
-				# 1080 * 540 * 6 = 3,499,200
-                layers.Conv2DTranspose(
                     3,
-                    (1, 3),
-                    strides=(1, 2),
-                    activation="relu",
+                    (3, 3),
+                    strides=(2, 2),
+                    activation="sigmoid",
                     data_format="channels_last",
                     padding="same",
                     use_bias=False,
                 ),
 				# 1080 * 1080 * 3 = 3,499,200
-                layers.BatchNormalization(),
-                layers.LeakyReLU(),
                 layers.experimental.preprocessing.Rescaling(255),
             ]
         )
@@ -274,19 +254,10 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 layers.MaxPooling2D(),
 				# 45 * 45 * 18 = 36,450
                 layers.Dropout(0.2),
-                layers.Conv2D(
-                    27,
-                    (1, 3),
-					strides=(1, 3),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                ),
-				# 45 * 15 * 27 = 18225
 				layers.Conv2D(
                     36,
-                    (3, 1),
-					strides=(3, 1),
+                    (3, 3),
+					strides=(3, 3),
                     activation="relu",
                     data_format="channels_last",
                     padding="same",

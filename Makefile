@@ -1,5 +1,5 @@
 IMAGE_SQUARE_SIZE := 1080
-TARGET_DATASET := flower_photos
+TARGET_DATASET := flower_photos_some
 
 clean:
 	rm -f ./generator_images_${TARGET_DATASET}/*.jpg

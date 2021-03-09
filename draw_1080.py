@@ -75,13 +75,13 @@ class DeepConvolutionalNeuralNetworkArtist(object):
                 ),
 				# 20 * 20 * 3 = 1,200
                 layers.Flatten(),
-                layers.Dense(45 * 45 * 36, use_bias=False),
-				# 45 * 45 * 36 = 72,900
+                layers.Dense(18 * 18 * 196, use_bias=False),
+				# 18 * 18 * 196 = 63,504
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
-				layers.Reshape((45, 45, 36), input_shape=(45 * 45 * 36,)),
+				layers.Reshape((18, 18, 196), input_shape=(18 * 18 * 196,)),
                 layers.Conv2DTranspose(
-                    34,
+                    160,
                     (3, 1),
                     strides=(2, 1),
                     activation="relu",
@@ -89,9 +89,9 @@ class DeepConvolutionalNeuralNetworkArtist(object):
                     padding="same",
                     use_bias=False,
                 ),
-				# 90 * 45 * 34 = 137,700
+				# 36 * 18 * 160 = 103,680
                 layers.Conv2DTranspose(
-                    32,
+                    128,
                     (1, 3),
                     strides=(1, 2),
                     activation="relu",
@@ -99,57 +99,49 @@ class DeepConvolutionalNeuralNetworkArtist(object):
                     padding="same",
                     use_bias=False,
                 ),
-				# 90 * 90 * 32 = 259,200
+				# 36 * 36 * 128 = 165,888
 				layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    25,
-                    (3, 1),
-                    strides=(3, 1),
+                    96,
+                    (3, 3),
+                    strides=(2, 2),
                     activation="relu",
                     data_format="channels_last",
                     padding="same",
                     use_bias=False,
                 ),
-				# 270 * 90 * 25 = 607,500
-                layers.Conv2DTranspose(
-                    18,
-                    (1, 3),
-                    strides=(1, 3),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                    use_bias=False,
-                ),
-				# 270 * 270 * 18 = 1,312,200
+				# 72 * 72 * 96 = 497,664
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    12,
-                    (3, 1),
-                    strides=(2, 1),
+                    64,
+                    (7, 7),
+                    strides=(3, 3),
                     activation="relu",
                     data_format="channels_last",
                     padding="same",
                     use_bias=False,
                 ),
-				# 540 * 270 * 12 = 1,749,600
+				# 216 * 216 * 64 = 2,985,984
+                layers.BatchNormalization(),
+                layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    9,
-                    (1, 3),
-                    strides=(1, 2),
+                    3,
+                    (11, 11),
+                    strides=(5, 5),
                     activation="relu",
                     data_format="channels_last",
                     padding="same",
                     use_bias=False,
                 ),
-				# 540 * 540 * 9 = 2,624,400
+				# 1080 * 1080 * 3 = 3,499,200
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
                     3,
                     (3, 3),
-                    strides=(2, 2),
+                    strides=(1, 1),
                     activation="sigmoid",
                     data_format="channels_last",
                     padding="same",

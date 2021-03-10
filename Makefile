@@ -30,6 +30,9 @@ draw:
 	./generated_checkpoints/${TARGET_DATASET} \
 	./generated_images/${TARGET_DATASET}/${TARGET_DATASET}.jpg
 	
+movie:
+	./png_2_mpg.py ./generated_images/${TARGET_DATASET}/ seed
+
 SAVED_MODEL := sunflowers_3a
 
 draw-saved:

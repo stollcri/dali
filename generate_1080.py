@@ -39,8 +39,8 @@ def display_time(seconds, granularity=3):
 
 
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
-    def __init__(self, source_dir, checkpoint_dir, target_dir, print_only):
-        self.batch_size = 16
+    def __init__(self, source_dir, checkpoint_dir, target_dir, print_only):        
+        self.batch_size = 4
         self.epochs = 4000
         self.epochs_per_checkpoint = 32
         self.checkpoints_to_keep = 2
@@ -112,20 +112,20 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         model = tf.keras.Sequential(
             [
                 layers.experimental.preprocessing.Resizing(
-                    20,
-                    20,
+                    28,
+                    28,
                     interpolation="bilinear",
                     input_shape=(self.image_height, self.image_width, self.image_depth),
                 ),
-				# 20 * 20 * 3 = 1,200
+				# 28 * 28 * 3 = 2,352
                 layers.Flatten(),
-                layers.Dense(18 * 18 * 196, use_bias=False),
-				# 18 * 18 * 196 = 63,504
+                layers.Dense(30 * 30 * 128, use_bias=False),
+				# 30 * 30 * 128 = 115,200
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
-				layers.Reshape((18, 18, 196), input_shape=(18 * 18 * 196,)),
+				layers.Reshape((30, 30, 128), input_shape=(30 * 30 * 128,)),
                 layers.Conv2DTranspose(
-                    160,
+                    96,
                     (3, 1),
                     strides=(2, 1),
                     activation="relu",
@@ -133,21 +133,21 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     padding="same",
                     use_bias=False,
                 ),
-				# 36 * 18 * 160 = 103,680
+				# 60 * 30 * 96 = 172,800
                 layers.Conv2DTranspose(
-                    128,
+                    64,
                     (1, 3),
                     strides=(1, 2),
                     activation="relu",
                     data_format="channels_last",
                     padding="same",
                     use_bias=False,
-                ),
-				# 36 * 36 * 128 = 165,888
+                ),                
+                # 60 * 60 * 64 = 230,400
 				layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    96,
+                    32,
                     (3, 3),
                     strides=(2, 2),
                     activation="relu",
@@ -155,25 +155,35 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     padding="same",
                     use_bias=False,
                 ),
-				# 72 * 72 * 96 = 497,664
+                # 120 * 120 * 32 = 460,800
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    64,
-                    (7, 7),
-                    strides=(3, 3),
+                    24,
+                    (5, 1),
+                    strides=(3, 1),
                     activation="relu",
                     data_format="channels_last",
                     padding="same",
                     use_bias=False,
                 ),
-				# 216 * 216 * 64 = 2,985,984
+                # 360 * 120 * 24 = 1,036,800
+                layers.Conv2DTranspose(
+                    16,
+                    (1, 5),
+                    strides=(1, 3),
+                    activation="relu",
+                    data_format="channels_last",
+                    padding="same",
+                    use_bias=False,
+                ),
+                # 360 * 360 * 16 = 2,073,600
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
                     3,
-                    (11, 11),
-                    strides=(5, 5),
+                    (7, 7),
+                    strides=(3, 3),
                     activation="relu",
                     data_format="channels_last",
                     padding="same",
@@ -284,7 +294,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         if print_multiple:
             fig = plt.figure(figsize=(6, 6))
             for i in range(predictions.shape[0]):
-                plt.subplot(4, 4, i + 1)
+                plt.subplot(2, 2, i + 1)
                 plt.imshow(predictions[i, :, :, :].numpy().astype("uint8"))
                 plt.axis("off")
             plt.savefig(file_name)

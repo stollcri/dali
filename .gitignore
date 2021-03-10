@@ -12,3 +12,4 @@ source_images/**
 
 .pylintrc
 .python-version
+__pycache__

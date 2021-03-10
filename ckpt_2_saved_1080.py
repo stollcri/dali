@@ -22,9 +22,9 @@ if __name__ == "__main__":
         default=None,
     )
     parser.add_argument(
-		metavar="FILENAME",
-        help="Name of resulting image",
-        dest="target_file",
+		metavar="SAVED_MODEL_DIRECTORY",
+        help="Name of resulting saveed model",
+        dest="saved_model_dir",
         default=None,
     )
     parser.add_argument(
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if (args.checkpoint_dir is None or args.target_file is None):
+    if (args.checkpoint_dir is None or args.saved_model_dir is None):
         parser.print_usage()
         exit()
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(format="%(message)s", level=logging.INFO)
 
-    dcnna = DeepConvolutionalGenerativeAdversarialNetwork(
-        checkpoint_dir=args.checkpoint_dir, target_file=args.target_file
+    dcnn = DeepConvolutionalGenerativeAdversarialNetwork(
+        checkpoint_dir=args.checkpoint_dir, saved_model_dir=args.saved_model_dir
     )
-    dcnna.draw()
+    dcnn.save()

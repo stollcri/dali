@@ -1,5 +1,5 @@
 IMAGE_SQUARE_SIZE := 1080
-TARGET_DATASET := flower_photos_some
+TARGET_DATASET := sunflowers
 
 clean:
 	rm -f ./generator_images_${TARGET_DATASET}/*.jpg
@@ -30,7 +30,18 @@ draw:
 	./generated_checkpoints/${TARGET_DATASET} \
 	./generated_images/${TARGET_DATASET}/${TARGET_DATASET}.jpg
 	
+SAVED_MODEL := sunflowers_3a
+
 draw-saved:
+	@mkdir -p saved_models/${SAVED_MODEL}/generated_images
+	
 	./draw_${IMAGE_SQUARE_SIZE}.py -v \
-	./saved_models/flower_photos_some_a/generated_checkpoint/ \
-	./saved_models/flower_photos_some_a/generated_images/${TARGET_DATASET}.jpg
+	./saved_models/${SAVED_MODEL}/generated_checkpoint/ \
+	./saved_models/${SAVED_MODEL}/generated_images/${TARGET_DATASET}.jpg
+
+save-saved:
+	@mkdir -p saved_models/${SAVED_MODEL}/generated_model
+	
+	./ckpt_2_saved_${IMAGE_SQUARE_SIZE}.py -v \
+	./saved_models/${SAVED_MODEL}/generated_checkpoint/ \
+	./saved_models/${SAVED_MODEL}/generated_model/

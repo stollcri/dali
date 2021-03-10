@@ -6,10 +6,15 @@ import logging
 import os
 import sys
 
+DALI_IMAGE_SIZE = os.environ.get('DALI_IMAGE_SIZE')
 sys.path.append(os.path.abspath("."))
 
-from dcgan_1080 import DeepConvolutionalGenerativeAdversarialNetwork
-
+if DALI_IMAGE_SIZE == 1080:
+    from dcgan_1080 import DeepConvolutionalGenerativeAdversarialNetwork
+elif DALI_IMAGE_SIZE == 360:
+    from dcgan_360 import DeepConvolutionalGenerativeAdversarialNetwork
+else::
+    from dcgan_90 import DeepConvolutionalGenerativeAdversarialNetwork
 
 def display_time(seconds, granularity=3):
     intervals = (

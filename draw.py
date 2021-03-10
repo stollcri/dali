@@ -6,9 +6,15 @@ import logging
 import os
 import sys
 
+DALI_IMAGE_SIZE = os.environ.get('DALI_IMAGE_SIZE')
 sys.path.append(os.path.abspath("."))
 
-from dcgan_1080 import DeepConvolutionalGenerativeAdversarialNetwork
+if DALI_IMAGE_SIZE == 1080:
+    from dcgan_1080 import DeepConvolutionalGenerativeAdversarialNetwork
+elif DALI_IMAGE_SIZE == 360:
+    from dcgan_360 import DeepConvolutionalGenerativeAdversarialNetwork
+else::
+    from dcgan_90 import DeepConvolutionalGenerativeAdversarialNetwork
 
 
 if __name__ == "__main__":
@@ -22,9 +28,9 @@ if __name__ == "__main__":
         default=None,
     )
     parser.add_argument(
-		metavar="SAVED_MODEL_DIRECTORY",
-        help="Name of resulting saveed model",
-        dest="saved_model_dir",
+		metavar="FILENAME",
+        help="Name of resulting image",
+        dest="target_file",
         default=None,
     )
     parser.add_argument(
@@ -32,7 +38,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if (args.checkpoint_dir is None or args.saved_model_dir is None):
+    if (args.checkpoint_dir is None or args.target_file is None):
         parser.print_usage()
         exit()
 
@@ -41,7 +47,7 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(format="%(message)s", level=logging.INFO)
 
-    dcnn = DeepConvolutionalGenerativeAdversarialNetwork(
-        checkpoint_dir=args.checkpoint_dir, saved_model_dir=args.saved_model_dir
+    dcnna = DeepConvolutionalGenerativeAdversarialNetwork(
+        checkpoint_dir=args.checkpoint_dir, target_file=args.target_file
     )
-    dcnn.save()
+    dcnna.draw()

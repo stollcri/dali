@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import argparse
@@ -18,50 +17,43 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 
-
-def display_time(seconds, granularity=3):
-    intervals = (
-        ("weeks", 604800),  # 60 * 60 * 24 * 7
-        ("days", 86400),  # 60 * 60 * 24
-        ("hours", 3600),  # 60 * 60
-        ("minutes", 60),
-        ("seconds", 1),
-    )
-    result = []
-    for name, count in intervals:
-        value = seconds // count
-        if value:
-            seconds -= value * count
-            if value == 1:
-                name = name.rstrip("s")
-            result.append("{} {}".format(value, name))
-    return ", ".join(result[:granularity])
-
-
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
-    def __init__(self, source_dir, checkpoint_dir, target_dir):
-        self.batch_size = 16
-        self.epochs = 936
+    def __init__(self,
+			source_dir=None,
+			checkpoint_dir=None,
+			target_dir=None,
+			print_only=None,
+			saved_model_dir=None,
+			target_file=None
+		):
+        self.batch_size = 4
+        self.epochs = 4000
         self.epochs_per_checkpoint = 32
         self.checkpoints_to_keep = 2
 
-        self.image_height = 360
-        self.image_width = 360
+        self.image_height = 90
+        self.image_width = 90
         self.image_depth = 3
 
-        self.source_images_path = pathlib.Path(source_dir)
-        self.target_images_path = target_dir
+        if source_dir is not None:
+            self.source_images_path = pathlib.Path(source_dir)
+        if target_dir is not None:
+            self.target_images_path = target_dir
+        if target_file is not None:
+            self.target_image_path = target_file
+        self.saved_model_dir = saved_model_dir
 
         self.generator = self.make_generator_model()
         self.discriminator = self.make_discriminator_model()
 
         self.seed = self.make_some_noise()
 
-        # # self.generator.build(input_shape=self.seed.shape)
-        # self.generator.summary()
-        # # self.discriminator.build(input_shape=self.seed.shape)
-        # self.discriminator.summary()
-        # exit()
+        if print_only:
+            # self.generator.build(input_shape=self.seed.shape)
+            self.generator.summary()
+            # self.discriminator.build(input_shape=self.seed.shape)
+            self.discriminator.summary()
+            exit()
 
         self.generator_optimizer = tf.keras.optimizers.Adam(1e-4)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
@@ -111,8 +103,8 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         model = tf.keras.Sequential(
             [
                 layers.experimental.preprocessing.Resizing(
-                    180,
-                    180,
+                    90,
+                    90,
                     interpolation="bilinear",
                     input_shape=(self.image_height, self.image_width, self.image_depth),
                 ),
@@ -123,17 +115,17 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     interpolation="bilinear",
                 ),
                 layers.Flatten(),
-                layers.Dense(45 * 45 * 48, use_bias=False),
+                layers.Dense(45 * 45 * 24, use_bias=False),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
-                layers.Reshape((45, 45, 48), input_shape=(45 * 45 * 48,)),
+                layers.Reshape((45, 45, 24), input_shape=(45 * 45 * 24,)),
                 layers.Conv2DTranspose(
-                    48, (3, 3), strides=(1, 1), padding="same", use_bias=False
+                    24, (3, 3), strides=(1, 1), padding="same", use_bias=False
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
                 layers.Conv2DTranspose(
-                    48,
+                    24,
                     (3, 1),
                     strides=(2, 1),
                     activation="relu",
@@ -142,7 +134,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                     use_bias=False,
                 ),
                 layers.Conv2DTranspose(
-                    48,
+                    24,
                     (1, 3),
                     strides=(1, 2),
                     activation="relu",
@@ -152,30 +144,30 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 ),
                 layers.BatchNormalization(),
                 layers.LeakyReLU(),
-                layers.Conv2DTranspose(
-                    12,
-                    (3, 1),
-                    strides=(2, 1),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                    use_bias=False,
-                ),
-                layers.Conv2DTranspose(
-                    12,
-                    (1, 3),
-                    strides=(1, 2),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                    use_bias=False,
-                ),
-                layers.BatchNormalization(),
-                layers.LeakyReLU(),
+                # layers.Conv2DTranspose(
+                #     12,
+                #     (3, 1),
+                #     strides=(2, 1),
+                #     activation="relu",
+                #     data_format="channels_last",
+                #     padding="same",
+                #     use_bias=False,
+                # ),
+                # layers.Conv2DTranspose(
+                #     12,
+                #     (1, 3),
+                #     strides=(1, 2),
+                #     activation="relu",
+                #     data_format="channels_last",
+                #     padding="same",
+                #     use_bias=False,
+                # ),
+                # layers.BatchNormalization(),
+                # layers.LeakyReLU(),
                 layers.Conv2DTranspose(
                     3,
                     (3, 3),
-                    strides=(2, 2),
+                    strides=(1, 1),
                     activation="sigmoid",
                     data_format="channels_last",
                     padding="same",
@@ -250,7 +242,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         if print_multiple:
             fig = plt.figure(figsize=(6, 6))
             for i in range(predictions.shape[0]):
-                plt.subplot(4, 4, i + 1)
+                plt.subplot(2, 2, i + 1)
                 plt.imshow(predictions[i, :, :, :].numpy().astype("uint8"))
                 plt.axis("off")
             plt.savefig(file_name)
@@ -272,6 +264,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
     # Notice the use of `tf.function`
     # This annotation causes the function to be "compiled".
     @tf.function
+    @tf.autograph.experimental.do_not_convert
     def train_step(self, images):
         noise = self.make_some_noise()
 
@@ -354,51 +347,15 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             True,
         )
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate images using Deep Convolutional Generative Adversarial Network"
-    )
-    parser.add_argument(
-        "-s",
-        "--source-dir",
-        help="Directory of class directories",
-        dest="source_dir",
-        default=None,
-    )
-    parser.add_argument(
-        "-c",
-        "--checkpoint-dir",
-        help="Directory to store checkpoints",
-        dest="checkpoint_dir",
-        default=None,
-    )
-    parser.add_argument(
-        "-t",
-        "--target-dir",
-        help="Directory of resulting images",
-        dest="target_dir",
-        default=None,
-    )
-    parser.add_argument(
-        "-v", "--verbose", help="verbose output", dest="verbose", action="store_true"
-    )
-    args = parser.parse_args()
-
-    if (
-        args.checkpoint_dir is None
-        or args.source_dir is None
-        or args.target_dir is None
-    ):
-        parser.print_usage()
-        exit()
-
-    if args.verbose:
-        logging.basicConfig(format="%(message)s", level=logging.DEBUG)
-    else:
-        logging.basicConfig(format="%(message)s", level=logging.INFO)
-
-    dcgan = DeepConvolutionalGenerativeAdversarialNetwork(
-        args.source_dir, args.checkpoint_dir, args.target_dir
-    )
-    dcgan.train()
+    def draw(self, dataset=None, epochs=None):
+        self.generate_and_save_images(
+            self.generator,
+            self.seed,
+            self.target_image_path
+        )
+        
+    def save(self):
+        if self.saved_model_dir is not None:
+            self.generator.save(self.saved_model_dir)
+        else:
+            logging.error("Source model directory not defined")

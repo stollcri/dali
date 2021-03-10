@@ -36,6 +36,7 @@ def display_time(seconds, granularity=3):
             result.append("{} {}".format(value, name))
     return ", ".join(result[:granularity])
 
+
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def __init__(self,
 			source_dir=None,

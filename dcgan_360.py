@@ -17,6 +17,26 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 
+
+def display_time(seconds, granularity=3):
+    intervals = (
+        ("weeks", 604800),  # 60 * 60 * 24 * 7
+        ("days", 86400),  # 60 * 60 * 24
+        ("hours", 3600),  # 60 * 60
+        ("minutes", 60),
+        ("seconds", 1),
+    )
+    result = []
+    for name, count in intervals:
+        value = seconds // count
+        if value:
+            seconds -= value * count
+            if value == 1:
+                name = name.rstrip("s")
+            result.append("{} {}".format(value, name))
+    return ", ".join(result[:granularity])
+
+
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
     def __init__(self,
 			source_dir=None,

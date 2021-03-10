@@ -13,7 +13,7 @@ if DALI_IMAGE_SIZE == 1080:
     from dcgan_1080 import DeepConvolutionalGenerativeAdversarialNetwork
 elif DALI_IMAGE_SIZE == 360:
     from dcgan_360 import DeepConvolutionalGenerativeAdversarialNetwork
-else::
+else:
     from dcgan_90 import DeepConvolutionalGenerativeAdversarialNetwork
 
 

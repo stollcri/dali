@@ -9,12 +9,19 @@ import sys
 DALI_IMAGE_SIZE = os.environ.get('DALI_IMAGE_SIZE')
 sys.path.append(os.path.abspath("."))
 
-if DALI_IMAGE_SIZE == 1080:
+if DALI_IMAGE_SIZE == "1152":
+    logging.info("Using dcgan_1152")
+    from dcgan_1152 import DeepConvolutionalGenerativeAdversarialNetwork
+elif DALI_IMAGE_SIZE == "1080":
+    logging.info("Using dcgan_1080")
     from dcgan_1080 import DeepConvolutionalGenerativeAdversarialNetwork
-elif DALI_IMAGE_SIZE == 360:
+elif DALI_IMAGE_SIZE == "360":
+    logging.info("Using dcgan_360")
     from dcgan_360 import DeepConvolutionalGenerativeAdversarialNetwork
 else:
+    logging.info("Using dcgan_90")
     from dcgan_90 import DeepConvolutionalGenerativeAdversarialNetwork
+
 
 def display_time(seconds, granularity=3):
     intervals = (
@@ -33,6 +40,7 @@ def display_time(seconds, granularity=3):
                 name = name.rstrip("s")
             result.append("{} {}".format(value, name))
     return ", ".join(result[:granularity])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -75,15 +83,16 @@ if __name__ == "__main__":
         parser.print_usage()
         exit()
 
-    if args.verbose:
-        logging.basicConfig(format="%(message)s", level=logging.DEBUG)
-    else:
-        logging.basicConfig(format="%(message)s", level=logging.INFO)
-
+    # if args.verbose:
+    #     logging.basicConfig(format="%(message)s", level=logging.DEBUG)
+    # else:
+    #     logging.basicConfig(format="%(message)s", level=logging.INFO)
+    # print(args.verbose)
     dcgan = DeepConvolutionalGenerativeAdversarialNetwork(
         source_dir=args.source_dir,
         checkpoint_dir=args.checkpoint_dir,
         target_dir=args.target_dir,
-        print_only=args.print_only
+        print_only=args.print_only,
+        verbose=args.verbose
     )
     dcgan.train()

@@ -11,6 +11,7 @@ print:
 	@mkdir -p generated_checkpoints/${TARGET_DATASET}
 	@mkdir -p generated_images/${TARGET_DATASET}
 	
+	DALI_IMAGE_SIZE=${DALI_IMAGE_SIZE} \
 	./generate.py -p -v \
 	--source-dir ./source_images/${TARGET_DATASET}/ \
 	--checkpoint-dir ./generated_checkpoints/${TARGET_DATASET} \
@@ -20,12 +21,14 @@ generate:
 	@mkdir -p generated_checkpoints/${TARGET_DATASET}
 	@mkdir -p generated_images/${TARGET_DATASET}
 	
+	DALI_IMAGE_SIZE=${DALI_IMAGE_SIZE} \
 	./generate.py -v \
 	--source-dir ./source_images/${TARGET_DATASET}/ \
 	--checkpoint-dir ./generated_checkpoints/${TARGET_DATASET} \
 	--target-dir ./generated_images/${TARGET_DATASET}
 	
 draw:
+	DALI_IMAGE_SIZE=${DALI_IMAGE_SIZE} \
 	./draw.py -v \
 	./generated_checkpoints/${TARGET_DATASET} \
 	./generated_images/${TARGET_DATASET}/${TARGET_DATASET}.jpg
@@ -38,6 +41,7 @@ SAVED_MODEL := sunflowers_3a
 draw-saved:
 	@mkdir -p saved_models/${SAVED_MODEL}/generated_images
 	
+	DALI_IMAGE_SIZE=${DALI_IMAGE_SIZE} \
 	./draw.py -v \
 	./saved_models/${SAVED_MODEL}/generated_checkpoint/ \
 	./saved_models/${SAVED_MODEL}/generated_images/${TARGET_DATASET}.jpg
@@ -45,6 +49,7 @@ draw-saved:
 save-saved:
 	@mkdir -p saved_models/${SAVED_MODEL}/generated_model
 	
+	DALI_IMAGE_SIZE=${DALI_IMAGE_SIZE} \
 	./ckpt_2_saved.py -v \
 	./saved_models/${SAVED_MODEL}/generated_checkpoint/ \
 	./saved_models/${SAVED_MODEL}/generated_model/

@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 
-DALI_IMAGE_SIZE = os.environ.get('DALI_IMAGE_SIZE')
+DALI_IMAGE_SIZE = os.environ.get("DALI_IMAGE_SIZE")
 sys.path.append(os.path.abspath("."))
 
 if DALI_IMAGE_SIZE == "1152":
@@ -15,6 +15,9 @@ if DALI_IMAGE_SIZE == "1152":
 elif DALI_IMAGE_SIZE == "1080":
     logging.info("Using dcgan_1080")
     from dcgan_1080 import DeepConvolutionalGenerativeAdversarialNetwork
+elif DALI_IMAGE_SIZE == "1024":
+    logging.info("Using dcgan_1024")
+    from dcgan_1024 import DeepConvolutionalGenerativeAdversarialNetwork
 elif DALI_IMAGE_SIZE == "360":
     logging.info("Using dcgan_360")
     from dcgan_360 import DeepConvolutionalGenerativeAdversarialNetwork
@@ -24,9 +27,7 @@ else:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Create images from a trained Deep Convolutional Neural Network"
-    )
+    parser = argparse.ArgumentParser(description="Create images from a trained Deep Convolutional Neural Network")
     parser.add_argument(
         metavar="CHECKPOINT_DIRECTORY",
         help="Directory to read checkpoint",
@@ -34,17 +35,15 @@ if __name__ == "__main__":
         default=None,
     )
     parser.add_argument(
-		metavar="SAVED_MODEL_DIRECTORY",
+        metavar="SAVED_MODEL_DIRECTORY",
         help="Name of resulting saveed model",
         dest="saved_model_dir",
         default=None,
     )
-    parser.add_argument(
-        "-v", "--verbose", help="verbose output", dest="verbose", action="store_true"
-    )
+    parser.add_argument("-v", "--verbose", help="verbose output", dest="verbose", action="store_true")
     args = parser.parse_args()
 
-    if (args.checkpoint_dir is None or args.saved_model_dir is None):
+    if args.checkpoint_dir is None or args.saved_model_dir is None:
         parser.print_usage()
         exit()
 

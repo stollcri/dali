@@ -1,4 +1,4 @@
-DALI_IMAGE_SIZE := 1080
+DALI_IMAGE_SIZE := 1024
 TARGET_DATASET := sunflowers
 
 clean:

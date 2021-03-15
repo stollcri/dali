@@ -14,7 +14,7 @@ def create_mp4(path, name, skip, fps):
 	for index, file in enumerate(os.listdir(path)):
 		file_name, file_extension = os.path.splitext(file)
 		if file_extension in supported_extensions:
-			if index % skip == 0 and file.startswith(name):
+			if index % (skip + 1) == 0 and file.startswith(name):
 				complete_path = os.path.join(path, file)
 				file_list.append(complete_path)
 	
@@ -48,14 +48,14 @@ if __name__ == "__main__":
 		type=int,
 		help="The number images to skip",
 		dest="skip",
-		default=4,
+		default=0,
 	)
 	parser.add_argument(
 		"-f", "--fps",
 		type=int,
 		help="The number of frames per second",
 		dest="fps",
-		default=24,
+		default=60,
 	)
 	parser.add_argument(
 		"-v", "--verbose", help="verbose output", dest="verbose", action="store_true"

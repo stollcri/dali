@@ -1,5 +1,5 @@
-DALI_IMAGE_SIZE := 1024
-TARGET_DATASET := sunflowers
+DALI_IMAGE_SIZE := 360
+TARGET_DATASET := flower_photos
 
 clean:
 	rm -f ./generator_images_${TARGET_DATASET}/*.jpg

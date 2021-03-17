@@ -20,7 +20,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 # data_dir = tf.keras.utils.get_file('flower_photos', origin=dataset_url, untar=True)
 # data_dir = pathlib.Path(data_dir)
 
-data_dir = pathlib.Path("./flower_photos_all")
+data_dir = pathlib.Path("./source_images/flower_photos/")
 
 batch_size = 16
 img_height = 360  # 180
@@ -81,117 +81,26 @@ normalization_layer = layers.experimental.preprocessing.Rescaling(1.0 / 255)
 
 num_classes = len(train_class_names)
 
-# model = Sequential(
-#     [
-#         layers.experimental.preprocessing.Rescaling(
-#             1.0 / 255, input_shape=(img_height, img_width, 3)
-#         ),
-#         layers.Conv2D(16, 3, padding="same", activation="relu"),
-#         layers.MaxPooling2D(),
-#         layers.Conv2D(32, 3, padding="same", activation="relu"),
-#         layers.MaxPooling2D(),
-#         layers.Conv2D(64, 3, padding="same", activation="relu"),
-#         layers.MaxPooling2D(),
-#         layers.Flatten(),
-#         layers.Dense(128, activation="relu"),
-#         layers.Dense(num_classes),
-#     ]
-# )
+image_height = 360
+image_width = 360
+image_depth = 3
+input_shape=(image_height, image_width, image_depth)
+img_input = keras.Input(shape=input_shape)
 
-# model = Sequential(
-#     [
-#         data_augmentation,
-#         layers.experimental.preprocessing.Rescaling(1.0 / 255),
-#         layers.Conv2D(16, 3, padding="same", activation="relu"),
-#         layers.MaxPooling2D(),
-#         layers.Conv2D(32, 3, padding="same", activation="relu"),
-#         layers.MaxPooling2D(),
-#         layers.Conv2D(64, 3, padding="same", activation="relu"),
-#         layers.MaxPooling2D(),
-#         layers.Dropout(0.2),
-#         layers.Flatten(),
-#         layers.Dense(128, activation="relu"),
-#         layers.Dense(num_classes),
-#     ]
-# )
+x = layers.experimental.preprocessing.Resizing(256, 256, interpolation="bilinear")(img_input)
+x = layers.experimental.preprocessing.Rescaling(1.0 / 127.5, offset=-1)(x)
 
-model = Sequential(
-    [
-        data_augmentation,
-        layers.experimental.preprocessing.Rescaling(
-            1.0 / 255,
-            input_shape=(img_height, img_width, img_depth),
-        ),
-        # 3 * 2 * 2
-        layers.Conv2D(
-            12,
-            (3, 3),
-            activation="relu",
-            data_format="channels_last",
-            padding="same",
-        ),
-        layers.MaxPooling2D(),
-        layers.Dropout(0.2),
-        # 3 * 4 * 4 OR 12 * 2 * 2
-        layers.Conv2D(
-            48,
-            (3, 3),
-            activation="relu",
-            data_format="channels_last",
-            padding="same",
-        ),
-        layers.MaxPooling2D(),
-        layers.Dropout(0.2),
-        # 3 * 8 * 8 OR 48 * 2 * 2
-        layers.Conv2D(
-            192,
-            (3, 3),
-            activation="relu",
-            data_format="channels_last",
-            padding="same",
-        ),
-        layers.MaxPooling2D(),
-        layers.Dropout(0.5),
-        layers.Flatten(),
-        layers.Dense(128, activation="relu"),
-        layers.Dense(num_classes),
-    ]
-)
+x = layers.Conv2D(12, 3, padding="same", activation="relu")(x)
+x = layers.MaxPooling2D()(x)
+x = layers.Conv2D(48, 3, padding="same", activation="relu")(x)
+x = layers.MaxPooling2D()(x)
+x = layers.Conv2D(192, 3, padding="same", activation="relu")(x)
+x = layers.MaxPooling2D()(x)
+x = layers.Dropout(0.2)(x)
+x = layers.Flatten()(x)
+x = layers.Dense(2)(x)
 
-# model = Sequential(
-#     [
-#         data_augmentation,
-#         layers.experimental.preprocessing.Rescaling(
-#             1.0 / 255,
-#             input_shape=(img_height, img_width, img_depth),
-#         ),
-#         layers.experimental.preprocessing.Resizing(
-#             180,
-#             180,
-#             interpolation="bilinear",
-#         ),
-# 
-#         layers.Conv2D(32, 3, activation="relu", data_format="channels_last", padding='same'),
-#         layers.BatchNormalization(),
-#         layers.Conv2D(32, 3, activation="relu", data_format="channels_last", padding='same'),
-#         layers.MaxPooling2D((2, 2)),
-#         layers.Dropout(0.25),
-#         
-#         layers.Conv2D(64, 3, activation="relu", data_format="channels_last", padding='same'),
-#         layers.BatchNormalization(),
-#         layers.Conv2D(64, 3, activation="relu", data_format="channels_last", padding='same'),
-#         layers.BatchNormalization(),
-#         layers.Conv2D(8, 3, activation="relu", data_format="channels_last", padding='same'),
-#         layers.MaxPooling2D((2, 2)),
-#         layers.Dropout(0.25),
-#         
-#         layers.Flatten(),
-#         layers.Dense(512, activation="relu"),
-#         layers.Dropout(0.5),
-#         layers.Dense(256, activation="relu"),
-#         layers.Dense(num_classes, activation="softmax"),
-#     ]
-# )
+model = tf.keras.models.Model(img_input, x, name="discriminator")
 
 model.compile(
     optimizer="adam",
@@ -201,10 +110,10 @@ model.compile(
 
 model.summary()
 
-epochs = 32
+epochs = 16
 history = model.fit(train_ds, validation_data=val_ds, epochs=epochs)
 
-model.save("./flower_model")
+model.save("./saved_models/flower_photos")
 
 acc = history.history["accuracy"]
 val_acc = history.history["val_accuracy"]
@@ -226,4 +135,4 @@ plt.plot(epochs_range, loss, label="Training Loss")
 plt.plot(epochs_range, val_loss, label="Validation Loss")
 plt.legend(loc="upper right")
 plt.title("Training and Validation Loss")
-plt.show()
+plt.savefig('./saved_models/flower_photos/chart.png')

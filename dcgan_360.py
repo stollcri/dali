@@ -44,10 +44,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 			target_dir=None,
 			print_only=None,
 			saved_model_dir=None,
-			target_file=None
+			target_file=None,
+            verbose=False
 		):
         self.batch_size = 4
-        self.epochs = 4000
+        self.epochs = 400  # 4000
         self.epochs_per_checkpoint = 32
         self.checkpoints_to_keep = 2
 
@@ -63,6 +64,12 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             self.target_image_path = target_file
         self.saved_model_dir = saved_model_dir
 
+        logger = logging.getLogger()
+        if verbose:
+            logger.setLevel(level=logging.DEBUG)
+        else:
+            logger.setLevel(level=logging.INFO)
+            
         self.generator = self.make_generator_model()
         self.discriminator = self.make_discriminator_model()
 
@@ -101,18 +108,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         else:
             logging.info("Initializing from scratch.")
 
-    #             pre_trained_model = keras.models.load_model("./flower_model")
-    #
-    #             self.discriminator.build(input_shape=self.seed.shape)
-    #             self.discriminator.layers[1].set_weights(
-    #                 pre_trained_model.layers[2].get_weights()
-    #             )
-    #             self.discriminator.layers[3].set_weights(
-    #                 pre_trained_model.layers[4].get_weights()
-    #             )
-    #             self.discriminator.layers[5].set_weights(
-    #                 pre_trained_model.layers[6].get_weights()
-    #             )
+        # pre_trained_model = keras.models.load_model("./saved_models/sunflowers_360_a")
+        # self.discriminator.build(input_shape=self.seed.shape)
+        # self.discriminator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
+        # self.discriminator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
+        # self.discriminator.layers[7].set_weights(pre_trained_model.layers[8].get_weights())
 
     def make_some_noise(self):
         return tf.random.normal(
@@ -120,127 +120,59 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         )
 
     def make_generator_model(self):
-        model = tf.keras.Sequential(
-            [
-                layers.experimental.preprocessing.Resizing(
-                    180,
-                    180,
-                    interpolation="bilinear",
-                    input_shape=(self.image_height, self.image_width, self.image_depth),
-                ),
-                layers.Conv1D(1, 1, activation="relu"),
-                layers.experimental.preprocessing.Resizing(
-                    30,
-                    30,
-                    interpolation="bilinear",
-                ),
-                layers.Flatten(),
-                layers.Dense(45 * 45 * 48, use_bias=False),
-                layers.BatchNormalization(),
-                layers.LeakyReLU(),
-                layers.Reshape((45, 45, 48), input_shape=(45 * 45 * 48,)),
-                layers.Conv2DTranspose(
-                    48, (3, 3), strides=(1, 1), padding="same", use_bias=False
-                ),
-                layers.BatchNormalization(),
-                layers.LeakyReLU(),
-                layers.Conv2DTranspose(
-                    48,
-                    (3, 1),
-                    strides=(2, 1),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                    use_bias=False,
-                ),
-                layers.Conv2DTranspose(
-                    48,
-                    (1, 3),
-                    strides=(1, 2),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                    use_bias=False,
-                ),
-                layers.BatchNormalization(),
-                layers.LeakyReLU(),
-                layers.Conv2DTranspose(
-                    12,
-                    (3, 1),
-                    strides=(2, 1),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                    use_bias=False,
-                ),
-                layers.Conv2DTranspose(
-                    12,
-                    (1, 3),
-                    strides=(1, 2),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                    use_bias=False,
-                ),
-                layers.BatchNormalization(),
-                layers.LeakyReLU(),
-                layers.Conv2DTranspose(
-                    3,
-                    (3, 3),
-                    strides=(2, 2),
-                    activation="sigmoid",
-                    data_format="channels_last",
-                    padding="same",
-                    use_bias=False,
-                ),
-                layers.experimental.preprocessing.Rescaling(255),
-            ]
-        )
-        return model
+        input_shape=(self.image_height, self.image_width, self.image_depth)
+        img_input = keras.Input(shape=input_shape)
+        
+        x = layers.experimental.preprocessing.Resizing(180, 180, interpolation="bilinear")(img_input)
+        x = layers.Conv1D(1, 1, activation="relu")(x)
+        x = layers.experimental.preprocessing.Resizing(30, 30, interpolation="bilinear")(x)
+        
+        x = layers.Flatten()(x)
+        x = layers.Dense(45 * 45 * 48, activation="relu")(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.LeakyReLU()(x)
+        x = layers.Reshape((45, 45, 48), input_shape=(45 * 45 * 48,))(x)
+        
+        x = layers.Conv2DTranspose(128, 5, strides=(1, 1), padding="same", use_bias=False)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.GaussianNoise(0.05)(x)
+        x = layers.LeakyReLU()(x)
+        
+        x = layers.Conv2DTranspose(128, 5, strides=(2, 2), padding="same", use_bias=False)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.GaussianNoise(0.05)(x)
+        x = layers.LeakyReLU()(x)
+        
+        x = layers.Conv2DTranspose(64, 5, strides=(2, 2), padding="same", use_bias=False)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.GaussianNoise(0.05)(x)
+        x = layers.LeakyReLU()(x)
+        
+        x = layers.Conv2DTranspose(3, 5, strides=(2, 2), padding="same", use_bias=False)(x)
+        
+        x = layers.Activation("sigmoid")(x)
+        x = layers.experimental.preprocessing.Rescaling(255)(x)
+        
+        return tf.keras.models.Model(img_input, x, name="generator")
 
     def make_discriminator_model(self):
-        model = tf.keras.Sequential(
-            [
-                layers.experimental.preprocessing.Rescaling(
-                    1.0 / 255,
-                    input_shape=(self.image_height, self.image_width, self.image_depth),
-                ),
-                # 3 * 2 * 2
-                layers.Conv2D(
-                    12,
-                    (3, 3),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                ),
-                layers.MaxPooling2D(),
-                layers.Dropout(0.2),
-                # 3 * 4 * 4 OR 12 * 2 * 2
-                layers.Conv2D(
-                    48,
-                    (3, 3),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                ),
-                layers.MaxPooling2D(),
-                layers.Dropout(0.2),
-                # 3 * 8 * 8 OR 48 * 2 * 2
-                layers.Conv2D(
-                    192,
-                    (3, 3),
-                    activation="relu",
-                    data_format="channels_last",
-                    padding="same",
-                ),
-                layers.MaxPooling2D(),
-                layers.Dropout(0.5),
-                layers.Flatten(),
-                layers.Dense(128, activation="relu"),
-                layers.Dense(1),
-            ]
-        )
-        return model
+        input_shape=(self.image_height, self.image_width, self.image_depth)
+        img_input = keras.Input(shape=input_shape)
+        
+        x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(img_input)
+        
+        x = layers.Conv2D(12, 3, padding="same", activation="relu")(x)
+        x = layers.MaxPooling2D()(x)
+        x = layers.Conv2D(48, 3, padding="same", activation="relu")(x)
+        x = layers.MaxPooling2D()(x)
+        x = layers.Conv2D(192, 3, padding="same", activation="relu")(x)
+        x = layers.MaxPooling2D()(x)
+        
+        x = layers.Dropout(0.2)(x)
+        x = layers.Flatten()(x)
+        x = layers.Dense(1)(x)
+        
+        return tf.keras.models.Model(img_input, x, name="discriminator")
 
     def discriminator_loss(self, real_output, fake_output):
         real_loss = self.cross_entropy(tf.ones_like(real_output), real_output)

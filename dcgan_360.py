@@ -108,11 +108,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         else:
             logging.info("Initializing from scratch.")
 
-        # pre_trained_model = keras.models.load_model("./saved_models/sunflowers_360_a")
-        # self.discriminator.build(input_shape=self.seed.shape)
-        # self.discriminator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
-        # self.discriminator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
-        # self.discriminator.layers[7].set_weights(pre_trained_model.layers[8].get_weights())
+        pre_trained_model = keras.models.load_model("./saved_models/flower_photos")
+        self.discriminator.build(input_shape=self.seed.shape)
+        self.discriminator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
+        self.discriminator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
+        self.discriminator.layers[7].set_weights(pre_trained_model.layers[8].get_weights())
 
     def make_some_noise(self):
         return tf.random.normal(
@@ -123,29 +123,40 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         input_shape=(self.image_height, self.image_width, self.image_depth)
         img_input = keras.Input(shape=input_shape)
         
-        x = layers.experimental.preprocessing.Resizing(180, 180, interpolation="bilinear")(img_input)
-        x = layers.Conv1D(1, 1, activation="relu")(x)
-        x = layers.experimental.preprocessing.Resizing(30, 30, interpolation="bilinear")(x)
+        x = layers.experimental.preprocessing.Resizing(28, 28, interpolation="bilinear")(img_input)
+        # x = layers.Conv1D(1, 1, activation="relu")(x)
+        # x = layers.experimental.preprocessing.Resizing(30, 30, interpolation="bilinear")(x)
         
         x = layers.Flatten()(x)
         x = layers.Dense(45 * 45 * 48, activation="relu")(x)
         x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)
         x = layers.Reshape((45, 45, 48), input_shape=(45 * 45 * 48,))(x)
-        
+
+        x = layers.Conv2DTranspose(128, 3, strides=(1, 1), padding="same", use_bias=False)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.GaussianNoise(0.1)(x)
+        x = layers.LeakyReLU()(x)
+                
         x = layers.Conv2DTranspose(128, 5, strides=(1, 1), padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
-        x = layers.GaussianNoise(0.05)(x)
+        x = layers.GaussianNoise(0.1)(x)
+        x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
+        x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)
         
         x = layers.Conv2DTranspose(128, 5, strides=(2, 2), padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
-        x = layers.GaussianNoise(0.05)(x)
+        x = layers.GaussianNoise(0.1)(x)
+        x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
+        x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)
         
         x = layers.Conv2DTranspose(64, 5, strides=(2, 2), padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
-        x = layers.GaussianNoise(0.05)(x)
+        x = layers.GaussianNoise(0.1)(x)
+        x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
+        x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)
         
         x = layers.Conv2DTranspose(3, 5, strides=(2, 2), padding="same", use_bias=False)(x)

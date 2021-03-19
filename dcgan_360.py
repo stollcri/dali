@@ -38,17 +38,18 @@ def display_time(seconds, granularity=3):
 
 
 class DeepConvolutionalGenerativeAdversarialNetwork(object):
-    def __init__(self,
-			source_dir=None,
-			checkpoint_dir=None,
-			target_dir=None,
-			print_only=None,
-			saved_model_dir=None,
-			target_file=None,
-            verbose=False
-		):
-        self.batch_size = 4
-        self.epochs = 400  # 4000
+    def __init__(
+        self,
+        source_dir=None,
+        checkpoint_dir=None,
+        target_dir=None,
+        print_only=None,
+        saved_model_dir=None,
+        target_file=None,
+        verbose=False,
+    ):
+        self.batch_size = 9
+        self.epochs = 80  # 4000
         self.epochs_per_checkpoint = 32
         self.checkpoints_to_keep = 2
 
@@ -65,11 +66,19 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         self.saved_model_dir = saved_model_dir
 
         logger = logging.getLogger()
-        if verbose:
-            logger.setLevel(level=logging.DEBUG)
+        console_formatter = logging.Formatter("%(message)s")
+        if len(logger.handlers) > 0:
+            console_handler = logger.handlers[0]
         else:
-            logger.setLevel(level=logging.INFO)
-            
+            console_handler = logging.StreamHandler()
+            logger.addHandler(console_handler)
+        console_handler.setFormatter(console_formatter)
+
+        if verbose:
+            logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.INFO)
+
         self.generator = self.make_generator_model()
         self.discriminator = self.make_discriminator_model()
 
@@ -82,10 +91,10 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             self.discriminator.summary()
             exit()
 
-        self.generator_optimizer = tf.keras.optimizers.Adam(1e-4)
-        self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
-
-        self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        # self.generator_optimizer = tf.keras.optimizers.Adam(1e-4)
+        # self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
+        self.generator_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9)
+        self.discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9)
 
         self.checkpoint_dir = checkpoint_dir
         self.checkpoint_prefix = os.path.join(self.checkpoint_dir, "ckpt")
@@ -102,97 +111,123 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         )
         self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint)
         if self.checkpoint_manager.latest_checkpoint:
-            logging.info(
-                "Restored from {}".format(self.checkpoint_manager.latest_checkpoint)
-            )
+            logging.info("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))
         else:
             logging.info("Initializing from scratch.")
 
-        pre_trained_model = keras.models.load_model("./saved_models/flower_photos")
-        self.discriminator.build(input_shape=self.seed.shape)
-        self.discriminator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
-        self.discriminator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
-        self.discriminator.layers[7].set_weights(pre_trained_model.layers[8].get_weights())
+        # pre_trained_model = keras.models.load_model("./saved_models/flower_photos")
+        # self.discriminator.build(input_shape=self.seed.shape)
+        # self.discriminator.layers[3].set_weights(pre_trained_model.layers[4].get_weights())
+        # self.discriminator.layers[5].set_weights(pre_trained_model.layers[6].get_weights())
+        # self.discriminator.layers[7].set_weights(pre_trained_model.layers[8].get_weights())
 
     def make_some_noise(self):
-        return tf.random.normal(
-            [self.batch_size, self.image_height, self.image_width, self.image_depth]
-        )
+        return tf.random.normal([self.batch_size, self.image_height, self.image_width, self.image_depth])
 
     def make_generator_model(self):
-        input_shape=(self.image_height, self.image_width, self.image_depth)
+        input_shape = (self.image_height, self.image_width, self.image_depth)
         img_input = keras.Input(shape=input_shape)
-        
+
         x = layers.experimental.preprocessing.Resizing(28, 28, interpolation="bilinear")(img_input)
         # x = layers.Conv1D(1, 1, activation="relu")(x)
         # x = layers.experimental.preprocessing.Resizing(30, 30, interpolation="bilinear")(x)
-        
-        x = layers.Flatten()(x)
-        x = layers.Dense(45 * 45 * 48, activation="relu")(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.LeakyReLU()(x)
-        x = layers.Reshape((45, 45, 48), input_shape=(45 * 45 * 48,))(x)
 
-        x = layers.Conv2DTranspose(128, 3, strides=(1, 1), padding="same", use_bias=False)(x)
+        x = layers.Flatten()(x)
+        x = layers.Dense(45 * 45 * 28, activation="relu")(x)
+        x = layers.Reshape((45, 45, 28), input_shape=(45 * 45 * 28,))(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.LeakyReLU()(x)
+
+        x = layers.Conv2DTranspose(128, 3, strides=(1, 1), activation="relu", padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
         x = layers.LeakyReLU()(x)
-                
-        x = layers.Conv2DTranspose(128, 5, strides=(1, 1), padding="same", use_bias=False)(x)
+
+        x = layers.Conv2DTranspose(128, 5, strides=(1, 1), activation="relu", padding="same", use_bias=False)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Conv2D(128, 3, activation="relu", padding="same")(x)
         x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
-        x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
-        x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)
-        
-        x = layers.Conv2DTranspose(128, 5, strides=(2, 2), padding="same", use_bias=False)(x)
+
+        x = layers.Conv2DTranspose(128, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Conv2D(128, 3, activation="relu", padding="same")(x)
         x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
-        x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
-        x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)
-        
-        x = layers.Conv2DTranspose(64, 5, strides=(2, 2), padding="same", use_bias=False)(x)
+
+        x = layers.Conv2DTranspose(64, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Conv2D(128, 3, activation="relu", padding="same")(x)
         x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
-        x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
-        x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)
-        
-        x = layers.Conv2DTranspose(3, 5, strides=(2, 2), padding="same", use_bias=False)(x)
-        
-        x = layers.Activation("sigmoid")(x)
-        x = layers.experimental.preprocessing.Rescaling(255)(x)
-        
+
+        # x = layers.Conv2DTranspose(3, 5, strides=(2, 2), activation="sigmoid", padding="same", use_bias=False)(x)
+        # x = layers.experimental.preprocessing.Rescaling(255)(x)
+
+        x = layers.Conv2DTranspose(3, 5, strides=(2, 2), activation="tanh", padding="same", use_bias=False)(x)
+        x = layers.experimental.preprocessing.Rescaling(127.5)(x)
+        x = layers.experimental.preprocessing.Rescaling(1, offset=127.5)(x)
+
         return tf.keras.models.Model(img_input, x, name="generator")
 
     def make_discriminator_model(self):
-        input_shape=(self.image_height, self.image_width, self.image_depth)
+        input_shape = (self.image_height, self.image_width, self.image_depth)
         img_input = keras.Input(shape=input_shape)
-        
-        x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(img_input)
-        
+
+        # x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(img_input)
+
+        x = layers.experimental.preprocessing.Rescaling(1.0, offset=-127.5)(img_input)
+        x = layers.experimental.preprocessing.Rescaling(1.0 / 127.5)(x)
+
         x = layers.Conv2D(12, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
         x = layers.Conv2D(48, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
         x = layers.Conv2D(192, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
-        
+
         x = layers.Dropout(0.2)(x)
         x = layers.Flatten()(x)
         x = layers.Dense(1)(x)
-        
+
         return tf.keras.models.Model(img_input, x, name="discriminator")
 
+    # see also: https://keras.io/examples/generative/wgan_gp/
+
+    def calculate_gradient_penalty(self, real_images, fake_images):
+        # Get the interpolated image
+        alpha = tf.random.normal([self.batch_size, 1, 1, 1], 0.0, 1.0)
+        diff = fake_images - real_images
+        interpolated = real_images + alpha * diff
+
+        with tf.GradientTape() as gp_tape:
+            gp_tape.watch(interpolated)
+            # 1. Get the discriminator output for this interpolated image.
+            pred = self.discriminator(interpolated, training=True)
+
+        # 2. Calculate the gradients w.r.t to this interpolated image.
+        grads = gp_tape.gradient(pred, [interpolated])[0]
+        # 3. Calculate the norm of the gradients.
+        norm = tf.sqrt(tf.reduce_sum(tf.square(grads), axis=[1, 2, 3]))
+        gp = tf.reduce_mean((norm - 1.0) ** 2)
+        return gp
+
+    # re: loss
+    # see also: https://github.com/tensorflow/tensorflow/blob/2007e1ba474030fcce840b0b8a599558e7d5998f/tensorflow/contrib/gan/python/losses/python/losses_impl.py
+
     def discriminator_loss(self, real_output, fake_output):
-        real_loss = self.cross_entropy(tf.ones_like(real_output), real_output)
-        fake_loss = self.cross_entropy(tf.zeros_like(fake_output), fake_output)
+        cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        real_loss = cross_entropy(tf.ones_like(real_output), real_output)
+        fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
         total_loss = real_loss + fake_loss
         return total_loss
 
     def generator_loss(self, fake_output):
-        return self.cross_entropy(tf.ones_like(fake_output), fake_output)
+        cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        return cross_entropy(tf.ones_like(fake_output), fake_output)
 
     def generate_and_save_images(self, model, input, file_name, print_multiple=False):
         # Notice `training` is set to False.
@@ -205,7 +240,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         if print_multiple:
             fig = plt.figure(figsize=(6, 6))
             for i in range(predictions.shape[0]):
-                plt.subplot(2, 2, i + 1)
+                plt.subplot(3, 3, i + 1)
                 plt.imshow(predictions[i, :, :, :].numpy().astype("uint8"))
                 plt.axis("off")
             plt.savefig(file_name)
@@ -228,7 +263,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
     # This annotation causes the function to be "compiled".
     @tf.function
     @tf.autograph.experimental.do_not_convert
-    def train_step(self, images):
+    def train_step(self, images, gradient_penalty_weight=2.5):
         noise = self.make_some_noise()
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
@@ -241,23 +276,27 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             gen_loss = self.generator_loss(fake_output)
             disc_loss = self.discriminator_loss(real_output, fake_output)
 
-        gradients_of_generator = gen_tape.gradient(
-            gen_loss, self.generator.trainable_variables
-        )
-        gradients_of_discriminator = disc_tape.gradient(
-            disc_loss, self.discriminator.trainable_variables
-        )
+            gradient_penalty = self.calculate_gradient_penalty(images[0], generated_images)
+            disc_loss_total = disc_loss + gradient_penalty * gradient_penalty_weight
 
-        self.generator_optimizer.apply_gradients(
-            zip(gradients_of_generator, self.generator.trainable_variables)
-        )
+        gradients_of_generator = gen_tape.gradient(gen_loss, self.generator.trainable_variables)
+        gradients_of_discriminator = disc_tape.gradient(disc_loss_total, self.discriminator.trainable_variables)
+
+        self.generator_optimizer.apply_gradients(zip(gradients_of_generator, self.generator.trainable_variables))
         self.discriminator_optimizer.apply_gradients(
             zip(gradients_of_discriminator, self.discriminator.trainable_variables)
         )
 
-        return gen_loss, disc_loss
+        return gen_loss, disc_loss_total
 
     def train(self, dataset=None, epochs=None):
+        ##
+        ## WARNING: This will convert RGBA images to RGB (the default setting)
+        ##          however, some RGBA images will come out black !!!!!!!!!!
+        ##          If you see unexpected large black blobs in the generated
+        ##          images, then check if you are using RGBA images and manually
+        ##          remove the alpha channel permanently (otside of here)
+        ##
         if dataset is None:
             dataset = tf.keras.preprocessing.image_dataset_from_directory(
                 self.source_images_path,
@@ -266,21 +305,38 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             )
             # print(dataset)
             AUTOTUNE = tf.data.experimental.AUTOTUNE
-            dataset = dataset.cache().shuffle(256).prefetch(buffer_size=AUTOTUNE)
+            dataset = dataset.shuffle((self.batch_size * 4), reshuffle_each_iteration=True)
 
         if epochs is None:
             epochs = self.epochs
 
+        gen_loss = None
+        disc_loss = None
+        gradient_penalty_weight_default = 1.6
+
         for epoch in range(epochs):
             start = time.time()
+
+            # # tried this, but must cause a memory leak somehow?
+            # gradient_penalty_weight = gradient_penalty_weight_default
+            # if gen_loss is not None and disc_loss is not None:
+            #     gen_over_dsc = float(gen_loss.numpy() / (disc_loss.numpy() + 0.1))
+            #     if gen_over_dsc > 1:
+            #         gradient_penalty_weight = gen_over_dsc
+            # logging.debug(f"Gradient penalty weight {gradient_penalty_weight}")
 
             bar = FillingCirclesBar(
                 f"Epoch {epoch}/{epochs} Loss: gen {0.0:7.5f}, disc {0.0:7.5f}",
                 max=len(dataset),
             )
+
             for image_batch in dataset:
-                gen_loss, disc_loss = self.train_step(image_batch)
-                bar.message = f"Epoch {epoch}/{epochs} Loss: gen {gen_loss.numpy():7.5f}, disc {disc_loss.numpy():7.5f}"
+                batch_size = image_batch[0].get_shape()[0]
+                if batch_size == self.batch_size:
+                    gen_loss, disc_loss = self.train_step(image_batch)
+                    bar.message = (
+                        f"Epoch {epoch}/{epochs} Loss: gen {gen_loss.numpy():7.5f}, disc {disc_loss.numpy():7.5f}"
+                    )
                 bar.next()
             bar.finish()
 
@@ -311,12 +367,8 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         )
 
     def draw(self, dataset=None, epochs=None):
-        self.generate_and_save_images(
-            self.generator,
-            self.seed,
-            self.target_image_path
-        )
-        
+        self.generate_and_save_images(self.generator, self.seed, self.target_image_path)
+
     def save(self):
         if self.saved_model_dir is not None:
             self.generator.save(self.saved_model_dir)

@@ -1,5 +1,5 @@
 DALI_IMAGE_SIZE := 360
-TARGET_DATASET := emoji_faces
+TARGET_DATASET := sunflowers
 
 clean:
 	rm -f ./generator_images_${TARGET_DATASET}/*.jpg

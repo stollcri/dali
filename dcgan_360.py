@@ -174,19 +174,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         #=> 32 * 32 * 3 = 3,072
         x = layers.experimental.preprocessing.Resizing(32, 32, interpolation="bilinear")(img_input)
         x = layers.Flatten()(x)
-
-        # x = layers.Dense(45 * 45 * 28, activation="relu")(x)
-        # x = layers.Reshape((45, 45, 28), input_shape=(45 * 45 * 28,))(x)
-        # x = layers.BatchNormalization()(x)
-        # x = layers.LeakyReLU()(x)
-        
-        # was
-        #    ( 32 * 32 * 3  *  36 * 36 * 3 )
-        #  + ( 36 * 36 * 3  *  45 * 45 * 16 )
-        # now
-        #    ( 32 * 32 * 3  *  32 * 32 * 4 )
-        #  + ( 32 * 32 * 4  *  36 * 36 * 4 )
-        #  + ( 36 * 36 * 4  *  45 * 45 * 9 )
                 
         #=> 32 * 32 * 4 = 4,096
         x = layers.Dense(32 * 32 * 3, activation="relu")(x)
@@ -262,46 +249,50 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         return tf.keras.models.Model(img_input, x, name="discriminator")
 
-    def calculate_gradient_penalty_a(self, real_images, fake_images):
-        """ Calculate gradient penalty using ?
-        
-        https://keras.io/examples/generative/wgan_gp/
-        """ 
-        # Get the interpolated image
-        alpha = tf.random.normal([self.batch_size, 1, 1, 1], 0.0, 1.0)
-        diff = fake_images - real_images
-        interpolated = real_images + alpha * diff
-
-        with tf.GradientTape() as gp_tape:
-            gp_tape.watch(interpolated)
-            # 1. Get the discriminator output for this interpolated image.
-            pred = self.discriminator(interpolated, training=True)
-
-        # 2. Calculate the gradients w.r.t to this interpolated image.
-        grads = gp_tape.gradient(pred, [interpolated])[0]
-        # 3. Calculate the norm of the gradients.
-        norm = tf.sqrt(tf.reduce_sum(tf.square(grads), axis=[1, 2, 3]))
-        gp = tf.reduce_mean((norm - 1.0) ** 2)
-        return gp
-
-    def calculate_gradient_penalty_b(self, real_images, fake_images):  
-        """ Calculate gradient penalty using WGAN-GP
-        """
-        shape = [tf.shape(real_images)[0]] + [1] * (real_images.shape.ndims - 1)
-        alpha = tf.random.uniform(shape=shape, minval=0., maxval=1.)
-        inter = real_images + alpha * (fake_images - real_images)
-        inter.set_shape(real_images.shape)
-    
-        with tf.GradientTape() as t:
-            t.watch(inter)
-            pred = self.discriminator(inter, training=True)
-        grad = t.gradient(pred, inter)
-        norm = tf.norm(tf.reshape(grad, [tf.shape(grad)[0], -1]), axis=1)
-        gp = tf.reduce_mean((norm - 1.)**2)
-        return gp
+#     def calculate_gradient_penalty_a(self, real_images, fake_images):
+#         """ Calculate gradient penalty using ?
+#         
+#         https://keras.io/examples/generative/wgan_gp/
+#         """ 
+#         # Get the interpolated image
+#         alpha = tf.random.normal([self.batch_size, 1, 1, 1], 0.0, 1.0)
+#         diff = fake_images - real_images
+#         interpolated = real_images + alpha * diff
+# 
+#         with tf.GradientTape() as gp_tape:
+#             gp_tape.watch(interpolated)
+#             # 1. Get the discriminator output for this interpolated image.
+#             pred = self.discriminator(interpolated, training=True)
+# 
+#         # 2. Calculate the gradients w.r.t to this interpolated image.
+#         grads = gp_tape.gradient(pred, [interpolated])[0]
+#         # 3. Calculate the norm of the gradients.
+#         norm = tf.sqrt(tf.reduce_sum(tf.square(grads), axis=[1, 2, 3]))
+#         gp = tf.reduce_mean((norm - 1.0) ** 2)
+#         return gp
+# 
+#     def calculate_gradient_penalty_b(self, real_images, fake_images):  
+#         """ Calculate gradient penalty using WGAN-GP
+#
+#         https://arxiv.org/abs/1704.00028
+#         """
+#         shape = [tf.shape(real_images)[0]] + [1] * (real_images.shape.ndims - 1)
+#         alpha = tf.random.uniform(shape=shape, minval=0., maxval=1.)
+#         inter = real_images + alpha * (fake_images - real_images)
+#         inter.set_shape(real_images.shape)
+#     
+#         with tf.GradientTape() as t:
+#             t.watch(inter)
+#             pred = self.discriminator(inter, training=True)
+#         grad = t.gradient(pred, inter)
+#         norm = tf.norm(tf.reshape(grad, [tf.shape(grad)[0], -1]), axis=1)
+#         gp = tf.reduce_mean((norm - 1.)**2)
+#         return gp
 
     def calculate_gradient_penalty(self, real_images, _fake_images):
         """ Calculate gradient penalty using DRAGAN
+        
+        https://arxiv.org/abs/1705.07215v5
         """
         beta = tf.random.uniform(shape=tf.shape(real_images), minval=0., maxval=1.)
         b = real_images + 0.5 * tf.math.reduce_std(real_images) * beta
@@ -317,9 +308,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         norm = tf.norm(tf.reshape(grad, [tf.shape(grad)[0], -1]), axis=1)
         gp = tf.reduce_mean((norm - 1.)**2)
         return gp
-
-    # re: loss
-    # see also: https://github.com/tensorflow/tensorflow/blob/2007e1ba474030fcce840b0b8a599558e7d5998f/tensorflow/contrib/gan/python/losses/python/losses_impl.py
 
     def discriminator_loss(self, real_output, fake_output):
         cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
@@ -424,14 +412,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         for epoch in range(epochs):
             start = time.time()
-
-            # # tried this, but must cause a memory leak somehow?
-            # gradient_penalty_weight = gradient_penalty_weight_default
-            # if gen_loss is not None and disc_loss is not None:
-            #     gen_over_dsc = float(gen_loss.numpy() / (disc_loss.numpy() + 0.1))
-            #     if gen_over_dsc > 1:
-            #         gradient_penalty_weight = gen_over_dsc
-            # logging.debug(f"Gradient penalty weight {gradient_penalty_weight}")
 
             bar = FillingCirclesBar(
                 f"Epoch {epoch}/{epochs} Loss: gen {0.0:7.5f}, disc {0.0:7.5f}",

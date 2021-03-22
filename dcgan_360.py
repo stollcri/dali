@@ -195,24 +195,24 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         #=> 45 * 45 * 256 = 518,400
         x = layers.Conv2DTranspose(256, 3, strides=(1, 1), activation="relu", padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(256, 3, activation="relu", padding="same")(x)
-        x = layers.BatchNormalization()(x)
+        # x = layers.Conv2D(256, 3, activation="relu", padding="same")(x)
+        # x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
         x = layers.LeakyReLU()(x)
 
         #=> 90 * 90 * 128 = 1,036,800
         x = layers.Conv2DTranspose(128, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(128, 3, activation="relu", padding="same")(x)
-        x = layers.BatchNormalization()(x)
+        # x = layers.Conv2D(128, 3, activation="relu", padding="same")(x)
+        # x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
         x = layers.LeakyReLU()(x)
 
         #=> 180 * 180 * 64 = 2,073,600
         x = layers.Conv2DTranspose(64, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(64, 3, activation="relu", padding="same")(x)
-        x = layers.BatchNormalization()(x)
+        # x = layers.Conv2D(64, 3, activation="relu", padding="same")(x)
+        # x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
         x = layers.LeakyReLU()(x)
 

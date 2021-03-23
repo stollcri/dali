@@ -21,6 +21,9 @@ elif DALI_IMAGE_SIZE == "1024":
 elif DALI_IMAGE_SIZE == "360":
     logging.info("Using dcgan_360")
     from dcgan_360 import DeepConvolutionalGenerativeAdversarialNetwork
+elif DALI_IMAGE_SIZE == "128":
+    logging.info("Using dcgan_128")
+    from dcgan_128 import DeepConvolutionalGenerativeAdversarialNetwork
 else:
     logging.info("Using dcgan_90")
     from dcgan_90 import DeepConvolutionalGenerativeAdversarialNetwork

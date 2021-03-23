@@ -9,10 +9,7 @@ import sys
 DALI_IMAGE_SIZE = os.environ.get("DALI_IMAGE_SIZE")
 sys.path.append(os.path.abspath("."))
 
-if DALI_IMAGE_SIZE == "1152":
-    logging.info("Using dcgan_1152")
-    from dcgan_1152 import DeepConvolutionalGenerativeAdversarialNetwork
-elif DALI_IMAGE_SIZE == "1080":
+if DALI_IMAGE_SIZE == "1080":
     logging.info("Using dcgan_1080")
     from dcgan_1080 import DeepConvolutionalGenerativeAdversarialNetwork
 elif DALI_IMAGE_SIZE == "1024":

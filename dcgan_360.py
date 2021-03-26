@@ -174,7 +174,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         x = layers.experimental.preprocessing.Resizing(32, 32, interpolation="bilinear")(img_input)
         x = layers.Flatten()(x)
                 
-        #=> 32 * 32 * 4 = 4,096
+        #=> 32 * 32 * 3 = 3,072
         x = layers.Dense(32 * 32 * 3, activation="relu")(x)
         x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)
@@ -236,10 +236,10 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         x = layers.experimental.preprocessing.Rescaling(1.0, offset=-127.5)(img_input)
         x = layers.experimental.preprocessing.Rescaling(1.0 / 127.5)(x)
 
-        #=> 180 * 180 * 8 = 259,200
+        #=> 180 * 180 * 16 = 518,400
         x = layers.Conv2D(16, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
-        #=> 90 * 90 * 32 = 259,200
+        #=> 90 * 90 * 64 = 518,400
         x = layers.Conv2D(64, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
         #=> 45 * 45 * 128 = 259,200

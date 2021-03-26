@@ -18,8 +18,8 @@ print:
 	--target-dir ./generated_images/${TARGET_DATASET}
 	
 generate:
-	@rm -rf generated_checkpoints/${TARGET_DATASET}
-	@rm -rf generated_images/${TARGET_DATASET}
+	# @rm -rf generated_checkpoints/${TARGET_DATASET}
+	# @rm -rf generated_images/${TARGET_DATASET}
 	
 	@mkdir -p generated_checkpoints/${TARGET_DATASET}
 	@mkdir -p generated_images/${TARGET_DATASET}

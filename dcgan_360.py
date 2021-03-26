@@ -79,7 +79,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         target_file=None,
         verbose=False,
     ):
-        self.tensorflow_macos = False
         self.batch_size = 9
         self.epochs = 4000
         self.epochs_per_checkpoint = 32
@@ -232,19 +231,27 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         img_input = keras.Input(shape=input_shape)
 
         # x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(img_input)
-
+        
+        #=> 360 * 360 * 3 = 388,800
         x = layers.experimental.preprocessing.Rescaling(1.0, offset=-127.5)(img_input)
         x = layers.experimental.preprocessing.Rescaling(1.0 / 127.5)(x)
 
-        x = layers.Conv2D(12, 3, padding="same", activation="relu")(x)
+        #=> 180 * 180 * 8 = 259,200
+        x = layers.Conv2D(16, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
-        x = layers.Conv2D(48, 3, padding="same", activation="relu")(x)
+        #=> 90 * 90 * 32 = 259,200
+        x = layers.Conv2D(64, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
-        x = layers.Conv2D(192, 3, padding="same", activation="relu")(x)
+        #=> 45 * 45 * 128 = 259,200
+        x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
+        
+        #=> 45 * 45 * 16 = 32,400
+        x = layers.Conv2D(32, 1, padding="same", activation="relu")(x)
 
         x = layers.Dropout(0.2)(x)
         x = layers.Flatten()(x)
+        x = layers.Dense(128)(x)
         x = layers.Dense(1)(x)
 
         return tf.keras.models.Model(img_input, x, name="discriminator")
@@ -354,7 +361,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
     # This annotation causes the function to be "compiled".
     @tf.function
     @tf.autograph.experimental.do_not_convert
-    def train_step(self, images, gradient_penalty_weight=2.5):
+    def train_step(self, images, gradient_penalty_weight=1.0):
         noise = self.make_some_noise()
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
@@ -367,23 +374,18 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             gen_loss = self.generator_loss(fake_output)
             disc_loss = self.discriminator_loss(real_output, fake_output)
             
-            # nested gradients not working in tf-macos as of 2021-03-19
-            if not self.tensorflow_macos:
-                gradient_penalty = self.calculate_gradient_penalty(images[0], generated_images)
-            else:
-                gradient_penalty = 1.0
-                
+            gradient_penalty = self.calculate_gradient_penalty(images[0], generated_images)    
             disc_loss_total = disc_loss + gradient_penalty * gradient_penalty_weight
             
-        gradients_of_generator = gen_tape.gradient(gen_loss, self.generator.trainable_variables)
-        gradients_of_discriminator = disc_tape.gradient(disc_loss_total, self.discriminator.trainable_variables)
+            gradients_of_generator = gen_tape.gradient(gen_loss, self.generator.trainable_variables)
+            gradients_of_discriminator = disc_tape.gradient(disc_loss_total, self.discriminator.trainable_variables)
+    
+            self.generator_optimizer.apply_gradients(zip(gradients_of_generator, self.generator.trainable_variables))
+            self.discriminator_optimizer.apply_gradients(
+                zip(gradients_of_discriminator, self.discriminator.trainable_variables)
+            )
 
-        self.generator_optimizer.apply_gradients(zip(gradients_of_generator, self.generator.trainable_variables))
-        self.discriminator_optimizer.apply_gradients(
-            zip(gradients_of_discriminator, self.discriminator.trainable_variables)
-        )
-
-        return gen_loss, disc_loss_total
+            return gen_loss, disc_loss_total
 
     def train(self, dataset=None, epochs=None):
         ##
@@ -408,7 +410,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         gen_loss = None
         disc_loss = None
-        gradient_penalty_weight_default = 1.6
 
         for epoch in range(epochs):
             start = time.time()
@@ -443,6 +444,10 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
                 self.checkpoint_manager.save()
 
             logging.debug(f"Epoch completed in {display_time(time.time() - start)}")
+            
+            if np.isnan(gen_loss.numpy()) or np.isnan(disc_loss.numpy()):
+                logging.error(f"Unrecoverable error, loss value is not a number")
+                break
 
         # Generate after the final epoch
         display.clear_output(wait=True)

@@ -79,7 +79,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         target_file=None,
         verbose=False,
     ):
-        self.tensorflow_macos = False
         self.batch_size = 9
         self.epochs = 4000
         self.epochs_per_checkpoint = 32
@@ -171,57 +170,44 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         input_shape = (self.image_height, self.image_width, self.image_depth)
         img_input = keras.Input(shape=input_shape)
 
-        #=> 42 * 42 * 3 = 5292
-        x = layers.experimental.preprocessing.Resizing(42, 42, interpolation="bilinear")(img_input)
+        #=> 32 * 32 * 3 = 3,072
+        x = layers.experimental.preprocessing.Resizing(32, 32, interpolation="bilinear")(img_input)
         x = layers.Flatten()(x)
 
-		#=> 42 * 42 * 3 = 5292
-        x = layers.Dense(42 * 42 * 3, activation="relu")(x)
+		#=> 32 * 32 * 3 = 3,072
+        x = layers.Dense(32 * 32 * 3, activation="relu")(x)
         x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)
 		
-		# #=> 32 * 32 * 3 = 3,072
-        # x = layers.Dense(32 * 32 * 3, activation="relu")(x)
-        # x = layers.BatchNormalization()(x)
-        # x = layers.LeakyReLU()(x)
-		
-        # #=> 16 * 16 * 16 = 4096
-        # x = layers.Dense(16 * 16 * 16, activation="relu")(x)
-        # x = layers.BatchNormalization()(x)
-        # x = layers.LeakyReLU()(x)
-		        
-        #=> 4 * 4 * 2048 = 32768
-        x = layers.Dense(4 * 4 * 2048, activation="relu")(x)
+		#=> 16 * 16 * 16 = 4,096
+        x = layers.Dense(16 * 16 * 16, activation="relu")(x)
         x = layers.BatchNormalization()(x)
-        x = layers.LeakyReLU()(x)
-
-        x = layers.Reshape((4, 4, 2048), input_shape=(4 * 4 * 2048,))(x)
-
-        #=> 4 * 4 * 2048 = 32768
-        x = layers.Conv2DTranspose(2048, 3, strides=(1, 1), activation="relu", padding="same", use_bias=False)(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(2048, 3, activation="relu", padding="same")(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.GaussianNoise(0.1)(x)
-        x = layers.LeakyReLU()(x)
-
-        #=> 8 * 8 * 512 = 32768
-        x = layers.Conv2DTranspose(512, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(512, 3, activation="relu", padding="same")(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.GaussianNoise(0.1)(x)
         x = layers.LeakyReLU()(x)
 		
-        #=> 16 * 16 * 128 = 32768
-        x = layers.Conv2DTranspose(128, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
+        #=> 8 * 8 * 512 = 32,768
+        x = layers.Dense(8 * 8 * 512, activation="relu")(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.LeakyReLU()(x)
+
+        x = layers.Reshape((8, 8, 512), input_shape=(8 * 8 * 512,))(x)
+
+        #=> 8 * 8 * 512 = 32,768
+        x = layers.Conv2DTranspose(128, 3, strides=(1, 1), activation="relu", padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
         x = layers.Conv2D(128, 3, activation="relu", padding="same")(x)
         x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
         x = layers.LeakyReLU()(x)
 
-        #=> 32 * 32 * 32 = 32768
+        #=> 16 * 16 * 128 = 32,768
+        x = layers.Conv2DTranspose(128, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Conv2D(128, 3, activation="relu", padding="same")(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.GaussianNoise(0.1)(x)
+        x = layers.LeakyReLU()(x)
+		
+        #=> 32 * 32 * 32 = 32,768
         x = layers.Conv2DTranspose(32, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
         x = layers.Conv2D(32, 3, activation="relu", padding="same")(x)
@@ -246,18 +232,26 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         # x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(img_input)
 
-        x = layers.experimental.preprocessing.Rescaling(1.0, offset=-127.5)(img_input)
+        #=> 128 * 128 * 3 = 49,152
+        x = layers.experimental.preprocessing.Rescaling(1.0, offset=-127.5)(x)
         x = layers.experimental.preprocessing.Rescaling(1.0 / 127.5)(x)
 
-        x = layers.Conv2D(32, 3, padding="same", activation="relu")(x)
+        #=> 64 * 64 * 16 = 65,536
+        x = layers.Conv2D(16, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
+        #=> 32 * 32 * 64 = 65,536
+        x = layers.Conv2D(64, 3, padding="same", activation="relu")(x)
+        x = layers.MaxPooling2D()(x)
+        #=> 16 * 16 * 128 = 32,768
         x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
-        x = layers.Conv2D(512, 3, padding="same", activation="relu")(x)
-        x = layers.MaxPooling2D()(x)
+        
+        #=> 16 * 16 * 16 = 4,096
+        x = layers.Conv2D(32, 1, padding="same", activation="relu")(x)
 
         x = layers.Dropout(0.2)(x)
         x = layers.Flatten()(x)
+        x = layers.Dense(128)(x)
         x = layers.Dense(1)(x)
 
         return tf.keras.models.Model(img_input, x, name="discriminator")
@@ -380,12 +374,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             gen_loss = self.generator_loss(fake_output)
             disc_loss = self.discriminator_loss(real_output, fake_output)
             
-            # nested gradients not working in tf-macos as of 2021-03-19
-            if not self.tensorflow_macos:
-                gradient_penalty = self.calculate_gradient_penalty(images[0], generated_images)
-            else:
-                gradient_penalty = 1.0
-                
+            gradient_penalty = self.calculate_gradient_penalty(images[0], generated_images) 
             disc_loss_total = disc_loss + gradient_penalty * gradient_penalty_weight
             
         gradients_of_generator = gen_tape.gradient(gen_loss, self.generator.trainable_variables)
@@ -421,7 +410,6 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         gen_loss = None
         disc_loss = None
-        gradient_penalty_weight_default = 1.6
 
         for epoch in range(epochs):
             start = time.time()
@@ -457,6 +445,10 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
             logging.debug(f"Epoch completed in {display_time(time.time() - start)}")
 
+            if np.isnan(gen_loss.numpy()) or np.isnan(disc_loss.numpy()):
+                logging.error(f"Unrecoverable error, loss value is not a number")
+                break
+            
         # Generate after the final epoch
         display.clear_output(wait=True)
         image_file_name = "seed_{:04d}.png".format(epoch + 1)

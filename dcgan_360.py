@@ -184,7 +184,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)
         
-        #=> 45 * 45 * 9 = 18,225
+        #=> 45 * 45 * 16 = 32400
         x = layers.Dense(45 * 45 * 16, activation="relu")(x)
         x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU()(x)

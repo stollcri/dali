@@ -233,7 +233,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         # x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(img_input)
 
         #=> 128 * 128 * 3 = 49,152
-        x = layers.experimental.preprocessing.Rescaling(1.0, offset=-127.5)(x)
+        x = layers.experimental.preprocessing.Rescaling(1.0, offset=-127.5)(img_input)
         x = layers.experimental.preprocessing.Rescaling(1.0 / 127.5)(x)
 
         #=> 64 * 64 * 16 = 65,536

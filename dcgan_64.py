@@ -191,26 +191,26 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         x = layers.Reshape((8, 8, 512), input_shape=(8 * 8 * 512,))(x)
 
-        #=> 8 * 8 * 512 = 32,768
-        x = layers.Conv2DTranspose(128, 3, strides=(1, 1), activation="relu", padding="same", use_bias=False)(x)
+        #=> 8 * 8 * 1024 = 65,536
+        x = layers.Conv2DTranspose(1024, 3, strides=(1, 1), activation="relu", padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(128, 3, activation="relu", padding="same")(x)
+        x = layers.Conv2D(1024, 3, activation="relu", padding="same")(x)
         x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
         x = layers.LeakyReLU()(x)
 
-        #=> 16 * 16 * 128 = 32,768
-        x = layers.Conv2DTranspose(128, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
+        #=> 16 * 16 * 512 = 131,072
+        x = layers.Conv2DTranspose(512, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(128, 3, activation="relu", padding="same")(x)
+        x = layers.Conv2D(512, 3, activation="relu", padding="same")(x)
         x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
         x = layers.LeakyReLU()(x)
 		
-        #=> 32 * 32 * 32 = 32,768
-        x = layers.Conv2DTranspose(32, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
+        #=> 32 * 32 * 256 = 262,144
+        x = layers.Conv2DTranspose(256, 5, strides=(2, 2), activation="relu", padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(32, 3, activation="relu", padding="same")(x)
+        x = layers.Conv2D(256, 3, activation="relu", padding="same")(x)
         x = layers.BatchNormalization()(x)
         x = layers.GaussianNoise(0.1)(x)
         x = layers.LeakyReLU()(x)
@@ -232,26 +232,29 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         # x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(img_input)
 
-        #=> 128 * 128 * 3 = 49,152
-        x = layers.experimental.preprocessing.Rescaling(1.0, offset=-127.5)(x)
+        #=> 64 * 64 * 3 = 49,152
+        x = layers.experimental.preprocessing.Rescaling(1.0, offset=-127.5)(img_input)
         x = layers.experimental.preprocessing.Rescaling(1.0 / 127.5)(x)
 
-        #=> 64 * 64 * 16 = 65,536
-        x = layers.Conv2D(16, 3, padding="same", activation="relu")(x)
+        #=> 32 * 32 * 256 = 262,144
+        x = layers.Conv2D(256, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
-        #=> 32 * 32 * 64 = 65,536
-        x = layers.Conv2D(64, 3, padding="same", activation="relu")(x)
+        #=> 16 * 16 * 512 = 131,072
+        x = layers.Conv2D(512, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
-        #=> 16 * 16 * 128 = 32,768
-        x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
+        #=> 8 * 8 * 1024 = 65,536
+        x = layers.Conv2D(1024, 3, padding="same", activation="relu")(x)
+        x = layers.MaxPooling2D()(x)
+        #=> 4 * 4 * 2048 = 32,768
+        x = layers.Conv2D(2048, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
         
-        #=> 16 * 16 * 16 = 4,096
-        x = layers.Conv2D(32, 1, padding="same", activation="relu")(x)
+        #=> 4 * 4 * 2048 = 32,768
+        x = layers.Conv2D(2048, 1, padding="same", activation="relu")(x)
 
         x = layers.Dropout(0.2)(x)
         x = layers.Flatten()(x)
-        x = layers.Dense(128)(x)
+        x = layers.Dense(512)(x)
         x = layers.Dense(1)(x)
 
         return tf.keras.models.Model(img_input, x, name="discriminator")
@@ -361,7 +364,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
     # This annotation causes the function to be "compiled".
     @tf.function
     @tf.autograph.experimental.do_not_convert
-    def train_step(self, images, gradient_penalty_weight=1.25):
+    def train_step(self, images, gradient_penalty_weight=1.0):
         noise = self.make_some_noise()
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:

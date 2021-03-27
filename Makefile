@@ -1,4 +1,4 @@
-DALI_IMAGE_SIZE := 360
+DALI_IMAGE_SIZE := 64
 TARGET_DATASET := emoji_faces
 
 clean:

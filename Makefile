@@ -37,7 +37,7 @@ draw:
 	./generated_images/${TARGET_DATASET}/${TARGET_DATASET}.jpg
 	
 movie:
-	./png_2_mpg.py ./generated_images/${TARGET_DATASET}/ seed
+	./png_2_mpg.py ./generated_images/${TARGET_DATASET}/ e
 
 SAVED_MODEL := sunflowers_3a
 

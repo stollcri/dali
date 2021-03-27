@@ -307,6 +307,9 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         if epochs is None:
             epochs = self.epochs
 
+        final_gen_loss = 0.0
+        final_disc_loss = 0.0
+        
         for epoch in range(epochs):
             start = time.time()
 
@@ -316,13 +319,15 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             )
             for image_batch in dataset:
                 gen_loss, disc_loss = self.train_step(image_batch)
+                final_gen_loss = gen_loss.numpy()
+                final_disc_loss = disc_loss.numpy()
                 bar.message = f"Epoch {epoch}/{epochs} Loss: gen {gen_loss.numpy():7.5f}, disc {disc_loss.numpy():7.5f}"
                 bar.next()
             bar.finish()
 
             # Produce images for the GIF as we go
             display.clear_output(wait=True)
-            image_file_name = "seed_{:04d}.png".format(epoch + 1)
+            image_file_name = f"e{(epoch + 1):04d}-g{final_gen_loss:4.2f}-d{final_disc_loss:4.2f}.png"
             self.generate_and_save_images(
                 self.generator,
                 self.seed,
@@ -338,7 +343,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
 
         # Generate after the final epoch
         display.clear_output(wait=True)
-        image_file_name = "seed_{:04d}.png".format(epoch + 1)
+        image_file_name = f"e{(epoch + 1):04d}-g{final_gen_loss:4.2f}-d{final_disc_loss:4.2f}.png"
         self.generate_and_save_images(
             self.generator,
             self.seed,

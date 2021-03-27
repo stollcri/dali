@@ -246,7 +246,7 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
         x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
         x = layers.MaxPooling2D()(x)
         
-        #=> 45 * 45 * 16 = 32,400
+        #=> 45 * 45 * 32 = 32,400
         x = layers.Conv2D(32, 1, padding="same", activation="relu")(x)
 
         x = layers.Dropout(0.2)(x)

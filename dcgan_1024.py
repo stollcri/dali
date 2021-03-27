@@ -346,8 +346,11 @@ class DeepConvolutionalGenerativeAdversarialNetwork(object):
             True,
         )
 
-    def draw(self, dataset=None, epochs=None):
-        self.generate_and_save_images(self.generator, self.seed, self.target_image_path)
+    def draw(self, filename=None):
+        if filename is None:
+            self.generate_and_save_images(self.generator, self.make_some_noise(), self.target_image_path)
+        else:
+            self.generate_and_save_images(self.generator, self.make_some_noise(), filename)
 
     def save(self):
         if self.saved_model_dir is not None:

@@ -32,7 +32,7 @@ generate:
 	
 draw:
 	DALI_IMAGE_SIZE=${DALI_IMAGE_SIZE} \
-	./draw.py -v \
+	./draw.py -v --count 16 \
 	./generated_checkpoints/${TARGET_DATASET} \
 	./generated_images/${TARGET_DATASET}/${TARGET_DATASET}.jpg
 	

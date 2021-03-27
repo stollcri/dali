@@ -43,6 +43,13 @@ if __name__ == "__main__":
         dest="target_file",
         default=None,
     )
+    parser.add_argument(
+        "-c", "--count",
+        type=int,
+        help="The number of images to generate",
+        dest="count",
+        default=1,
+    )
     parser.add_argument("-v", "--verbose", help="verbose output", dest="verbose", action="store_true")
     args = parser.parse_args()
 
@@ -58,4 +65,7 @@ if __name__ == "__main__":
     dcnna = DeepConvolutionalGenerativeAdversarialNetwork(
         checkpoint_dir=args.checkpoint_dir, target_file=args.target_file, verbose=args.verbose
     )
-    dcnna.draw()
+    
+    for n in range(args.count):
+        file_name, file_extension = os.path.splitext(args.target_file)
+        dcnna.draw(f"{file_name}-{n:02d}{file_extension}")
